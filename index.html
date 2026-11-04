@@ -241,6 +241,8 @@ html,body{background:#000}
 .tutcard .dots{display:flex;gap:5px}.tutcard .dots i{width:7px;height:7px;border-radius:50%;background:#D5CFC2}.tutcard .dots i.on{background:#58B800}
 .tuthand{position:absolute;left:0;top:0;font-size:38px;z-index:26;pointer-events:none;display:none;filter:drop-shadow(0 4px 6px rgba(0,0,0,.6))}
 .tutghost{position:absolute;left:0;top:0;z-index:24;pointer-events:none;display:none;opacity:.85}
+.wintitle{font-size:30px;font-weight:700;letter-spacing:-.3px;margin:2px 0 6px;background:linear-gradient(90deg,#FF5DB1,#FFC61A,#9ACD32,#1E9BE8);-webkit-background-clip:text;background-clip:text;color:transparent}
+.winballs{display:flex;justify-content:center;gap:14px;margin:8px 0 22px;height:96px;align-items:flex-start}
 
 @media (max-width:559px){
   html,body{height:100%;overflow:hidden;position:fixed;inset:0}
@@ -361,10 +363,11 @@ body{-webkit-touch-callout:none}
 
   <!-- Win -->
   <div class="modal" id="mWin"><div class="sheet">
+    <div class="wintitle">The IQ Balls</div>
     <div class="sheethead"><div id="winMascot"></div><div class="bubble left" id="winBubble">Отлично!</div></div>
     <div id="winCat" style="color:var(--muted)">Starter · Уровень 1</div>
     <h2>Решено!</h2>
-    <div class="bigstars" id="winStars"></div>
+    <div class="winballs" id="winStars"></div>
     <div class="res"><div><b id="winTime">0:00</b>время</div><div><b id="winMoves">0</b>ходов</div><div><b id="winStreak">1</b>подряд 🔥</div></div>
     <button class="bigbtn green" id="winNext">Дальше</button>
     <button class="ghostbtn" id="winMap">К карте</button>
@@ -897,9 +900,22 @@ function checkWin(){if(G.grid.includes(-1))return;G.done=true;stopTimer();
   
   $('#winBubble').textContent=S0.streak>=3&&S0.streak%3===0?`${S0.streak} уровня подряд! Ты в ударе 🔥`:stars===3?pick(PRAISE_NOHINT.concat(PRAISE)):pick(PRAISE);
   $('#winCat').textContent=CATS.find(c=>c.id===G.L.cat).name+' · Уровень '+n;
-  $('#winStars').innerHTML=[1,2,3].map(i=>`<span class="${i<=stars?'':'off'}">★</span>`).join('');
+  $('#winStars').innerHTML=[1,2,3].map(i=>balloonIcon(i<=stars)).join('');
   $('#winTime').textContent=fmt(G.used);$('#winMoves').textContent=G.moves;$('#winStreak').textContent=S0.streak;
-  $('#winNext').style.display=n<LEVELS.length?'':'none';popAnim(()=>openM('#mWin'))}
+  $('#winNext').style.display=n<LEVELS.length?'':'none';popAnim(()=>{openM('#mWin');
+    // заработанные шарики надуваются по очереди
+    [...document.querySelectorAll('#winStars .wb.on')].forEach((b,i)=>inflate(b,350+i*260));
+    [...document.querySelectorAll('#winStars .wb:not(.on)')].forEach(b=>b.animate([{opacity:0},{opacity:1}],{duration:300,delay:350+stars*260,fill:'backwards'}))})}
+// красный воздушный шарик для окна победы (on — надут, иначе — сдутый серый)
+function balloonIcon(on){
+  const c=on?'#F2262E':'#3A3A40', dk=mix(c,'#000000',.35), g=on?'url(#g9)':'#3A3A40';
+  const body=on?`<ellipse cx="30" cy="30" rx="22" ry="26" fill="${g}"/><path d="M15 26 Q 16 12 30 9" stroke="#fff" stroke-width="4" stroke-linecap="round" fill="none" opacity=".75"/><circle cx="37" cy="13" r="2" fill="#fff" opacity=".8"/>`
+    :`<path d="M30 14 C 44 14 46 34 38 46 C 35 52 25 52 22 46 C 14 34 16 14 30 14 Z" fill="${g}"/><path d="M24 22 Q 30 26 36 22 M23 34 Q 30 38 37 33" stroke="#2A2A2F" stroke-width="2" fill="none"/>`;
+  const knotY=on?56:51;
+  return `<svg class="wb${on?' on':''}" viewBox="0 0 60 80" width="62" height="82" style="overflow:visible;transform-box:fill-box;transform-origin:50% 70%">
+    ${on?'<ellipse cx="31" cy="34" rx="21" ry="25" fill="#000" opacity=".35"/>':''}${body}
+    <path d="M28 ${knotY} L 25 ${knotY+7} Q 30 ${knotY+9} 35 ${knotY+7} L 32 ${knotY} Z" fill="${c}" stroke="${dk}" stroke-width="1.5" stroke-linejoin="round"/>
+    <path d="M30 ${knotY+8} q -4 6 0 10 q 4 4 0 10" stroke="${on?'#bbb':'#444'}" stroke-width="1.6" fill="none"/></svg>`}
 
 /* ---------- Победа: перемычки исчезают, шарики волной от центра сжимаются и лопаются брызгами ---------- */
 function popAnim(done){
