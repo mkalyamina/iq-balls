@@ -933,7 +933,9 @@ renderHome();refreshWallet();
 (function(){const h=location.hash.slice(1);if(h==='map'||h==='rules')go(h);else if(/^level-\d+$/.test(h))startLevel(Math.min(+h.split('-')[1],LEVELS.length))})();
 </script>
 <script>
-if('serviceWorker' in navigator){window.addEventListener('load',()=>{navigator.serviceWorker.register('sw.js').catch(()=>{})})}
+if('serviceWorker' in navigator){window.addEventListener('load',()=>{navigator.serviceWorker.register('sw.js',{updateViaCache:'none'}).then(r=>{r.update().catch(()=>{})}).catch(()=>{})});
+  // как только поставилась новая версия — один раз перезагрузить страницу
+  let reloaded=false;navigator.serviceWorker.addEventListener('controllerchange',()=>{if(reloaded)return;reloaded=true;location.reload()})}
 </script>
 </body>
 </html>
