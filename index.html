@@ -660,7 +660,7 @@ function lift(pi){G.grid=G.grid.map(v=>v===pi?-1:v);delete G.onBoard[pi]}
 /* «Надувание»: фигура раздувается из сдутого состояния с упругим перехлёстом */
 function inflate(el,delay=0){
   if(window.matchMedia&&matchMedia('(prefers-reduced-motion: reduce)').matches)return;
-  el.animate([{transform:'scale(.35,.5)',opacity:.6},{transform:'scale(1.12,1.06)',opacity:1,offset:.45},{transform:'scale(.95,.98)',offset:.7},{transform:'scale(1.03,1.01)',offset:.85},{transform:'scale(1)'}],
+  el.animate([{transform:'scale(.2,.25)',opacity:0},{transform:'scale(.4,.5)',opacity:1,offset:.12},{transform:'scale(1.12,1.06)',opacity:1,offset:.45},{transform:'scale(.95,.98)',offset:.7},{transform:'scale(1.03,1.01)',offset:.85},{transform:'scale(1)'}],
     {duration:620,delay,easing:'cubic-bezier(.3,.9,.4,1)',fill:'backwards'})}
 /* ---------- Открытие уровня: закреплённые фигуры заполняют поле, пустые лунки подсвечиваются ---------- */
 function introAnim(){
@@ -934,7 +934,6 @@ renderHome();refreshWallet();
 </script>
 <script>
 if('serviceWorker' in navigator){window.addEventListener('load',()=>{navigator.serviceWorker.register('sw.js',{updateViaCache:'none'}).then(r=>{r.update().catch(()=>{})}).catch(()=>{})});
-  // как только поставилась новая версия — один раз перезагрузить страницу
   let reloaded=false;navigator.serviceWorker.addEventListener('controllerchange',()=>{if(reloaded)return;reloaded=true;location.reload()})}
 </script>
 </body>
