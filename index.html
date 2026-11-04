@@ -468,12 +468,12 @@ function drawPiece(g,pi,cells,s,ox=0,oy=0,opts={}){
     // сужение к горлышку — рисуется ПОД шариком, наружу выходит только конус
     const b0x=ex+ux*s*.3, b0y=ey+uy*s*.3, b1x=ex+ux*s*.53, b1y=ey+uy*s*.53, nc=mix(col,'#000000',fixed?.42:.16);
     neck+=`<path d="M${b0x+px*s*.26} ${b0y+py*s*.26} Q ${b1x+px*s*.1} ${b1y+py*s*.1} ${b1x+px*s*.045} ${b1y+py*s*.045} L ${b1x-px*s*.045} ${b1y-py*s*.045} Q ${b1x-px*s*.1} ${b1y-py*s*.1} ${b0x-px*s*.26} ${b0y-py*s*.26} Z" fill="${nc}"/>`;
-    // скатанный ободок-«попка»
-    const kx=ex+ux*s*.56, ky=ey+uy*s*.56;
-    const krx=ux?s*.055:s*.1, kry=uy?s*.055:s*.1;
-    tl+=`<ellipse cx="${kx}" cy="${ky}" rx="${krx}" ry="${kry}" fill="${tdk}"/>`;
-    tl+=`<ellipse cx="${kx-ux*s*.012}" cy="${ky-uy*s*.012}" rx="${krx*.8}" ry="${kry*.8}" fill="${tcol}"/>`;
-    tl+=`<ellipse cx="${kx-ux*s*.02-px*s*.035}" cy="${ky-uy*s*.02-py*s*.035}" rx="${s*.025}" ry="${s*.018}" fill="${tlt}" opacity="${fixed?.3:.8}"/>`;
+    // треугольная завязка: узкая перетяжка → расширяющийся треугольный кончик
+    const nx=ex+ux*s*.52, ny=ey+uy*s*.52;            // перетяжка
+    const fx=ex+ux*s*.7,  fy=ey+uy*s*.7;              // край кончика
+    tl+=`<path d="M${nx+px*s*.03} ${ny+py*s*.03} L ${fx+px*s*.11} ${fy+py*s*.11} Q ${fx+ux*s*.03} ${fy+uy*s*.03} ${fx-px*s*.11} ${fy-py*s*.11} L ${nx-px*s*.03} ${ny-py*s*.03} Z" fill="${tcol}" stroke="${tdk}" stroke-width="${s*.025}" stroke-linejoin="round"/>`;
+    tl+=`<path d="M${nx+ux*s*.04+px*s*.02} ${ny+uy*s*.04+py*s*.02} L ${fx-ux*s*.02+px*s*.07} ${fy-uy*s*.02+py*s*.07}" stroke="${tlt}" stroke-width="${s*.025}" stroke-linecap="round" opacity="${fixed?.3:.8}"/>`;
+    tl+=`<ellipse cx="${nx}" cy="${ny}" rx="${ux?s*.025:s*.045}" ry="${uy?s*.025:s*.045}" fill="${tdk}"/>`;
   }
   g.insertAdjacentHTML('beforeend',sh+neck+seg+kn+tl);
 }
@@ -586,7 +586,7 @@ function heroAssemble(){
       if(set.has([r+1,c]+''))h+=`<ellipse cx="${x}" cy="${y+s/2}" rx="${s*.16}" ry="${s*.075}" fill="${dk}"/>`;}
     const g=document.createElementNS(NS,'g');g.innerHTML=h;return g}
   const ball=(x,y,pi)=>`<ellipse cx="${x}" cy="${y}" rx="${s*.46}" ry="${s*.46}" fill="url(#g${pi})"/><path d="M${x-s*.27} ${y-s*.05} Q ${x-s*.22} ${y-s*.3} ${x+s*.03} ${y-s*.32}" stroke="#fff" stroke-width="${s*.075}" stroke-linecap="round" fill="none" opacity=".75"/>`;
-  const finalDraw=()=>{hs.innerHTML='';const fg=document.createElementNS(NS,'g');hs.appendChild(fg);present.forEach(pi=>drawPiece(fg,pi,cellsP[pi],s))};
+  const finalDraw=(anim)=>{hs.innerHTML='';present.forEach((pi,i)=>{const fg=document.createElementNS(NS,'g');fg.style.transformBox='fill-box';fg.style.transformOrigin='center';hs.appendChild(fg);drawPiece(fg,pi,cellsP[pi],s);if(anim)inflate(fg,i*45)})};
   const MORPH=reduce?0:330, TINT=reduce?0:220, STEP=reduce?0:430;
   order.forEach(([pi,par],i)=>{
     const t0=250+i*STEP;
@@ -611,7 +611,7 @@ function heroAssemble(){
   });
   if(reduce)setTimeout(finalDraw,0);
   if(!reduce){const end=250+(present.length-1)*STEP+MORPH+TINT;
-    setTimeout(()=>{if(run!==heroRun)return;finalDraw();hs.animate([{transform:'scale(1)'},{transform:'scale(1.04)'},{transform:'scale(1)'}],{duration:420,easing:'ease-out'})},end)}
+    setTimeout(()=>{if(run!==heroRun)return;finalDraw(true);hs.animate([{transform:'scale(1)'},{transform:'scale(1.04)'},{transform:'scale(1)'}],{duration:420,easing:'ease-out'})},end)}
   hs.onclick=()=>heroAssemble();
 }
 /* ---------- MAP ---------- */
@@ -687,6 +687,7 @@ function render(){
   for(let pi=0;pi<12;pi++){const cells=cellsOf(G.grid,pi);if(!cells.length)continue;
     const pg=document.createElementNS(NS,'g');pg.setAttribute('class','bp'+(G.fixed.has(pi)?' fixed':' mine'));pg.dataset.pi=pi;g.appendChild(pg);
     drawPiece(pg,pi,cells,S,0,0,{fixed:G.fixed.has(pi)})}
+  if(G.justPlaced!=null){const jg=b.querySelector(`.bp[data-pi="${G.justPlaced}"]`);if(jg)inflate(jg,0);G.justPlaced=null}
   const prev=document.createElementNS(NS,'g');prev.id='preview';b.appendChild(prev);
   const tray=$('#tray');tray.innerHTML='';
   G.free.forEach(pi=>{const d=document.createElement('div');const on=G.onBoard[pi];
@@ -699,10 +700,15 @@ function render(){
   const selOk=G.sel!=null&&!G.onBoard[G.sel];$('#cRot').disabled=!selOk;$('#cFlip').disabled=!selOk;
 }
 function canPlace(cells,r0,c0){return cells.every(([r,c])=>{const R=r0+r,C=c0+c;return R>=0&&R<H&&C>=0&&C<W&&G.grid[R*W+C]===-1})}
-function place(pi,cells,r0,c0){cells.forEach(([r,c])=>G.grid[(r0+r)*W+c0+c]=pi);G.onBoard[pi]=true;G.shape[pi]=cells;G.moves++;G.lastMove=Date.now();
+function place(pi,cells,r0,c0){G.justPlaced=pi;cells.forEach(([r,c])=>G.grid[(r0+r)*W+c0+c]=pi);G.onBoard[pi]=true;G.shape[pi]=cells;G.moves++;G.lastMove=Date.now();
   G.sel=G.free.find(p=>!G.onBoard[p]);render();if(TUT)tutOnPlace();checkWin()}
 function lift(pi){G.grid=G.grid.map(v=>v===pi?-1:v);delete G.onBoard[pi]}
 
+/* «Надувание»: фигура раздувается из сдутого состояния с упругим перехлёстом */
+function inflate(el,delay=0){
+  if(window.matchMedia&&matchMedia('(prefers-reduced-motion: reduce)').matches)return;
+  el.animate([{transform:'scale(.35,.5)',opacity:.6},{transform:'scale(1.12,1.06)',opacity:1,offset:.45},{transform:'scale(.95,.98)',offset:.7},{transform:'scale(1.03,1.01)',offset:.85},{transform:'scale(1)'}],
+    {duration:620,delay,easing:'cubic-bezier(.3,.9,.4,1)',fill:'backwards'})}
 /* ---------- Открытие уровня: закреплённые фигуры заполняют поле, пустые лунки подсвечиваются ---------- */
 function introAnim(){
   const reduce=window.matchMedia&&matchMedia('(prefers-reduced-motion: reduce)').matches;if(reduce)return;
@@ -710,9 +716,8 @@ function introAnim(){
   // порядок: сверху вниз, как будто укладываем
   gs.sort((a,b)=>Math.min(...cellsOf(G.grid,+a.dataset.pi).map(c=>c[0]))-Math.min(...cellsOf(G.grid,+b.dataset.pi).map(c=>c[0])));
   const step=Math.min(90,700/Math.max(1,gs.length));
-  gs.forEach((g,i)=>g.animate([{transform:'translateY(-40px) scale(.85)',opacity:0},{transform:'translateY(3px) scale(1.02)',opacity:1,offset:.7},{transform:'none',opacity:1}],
-    {duration:420,delay:i*step,easing:'cubic-bezier(.3,.9,.4,1)',fill:'backwards'}));
-  const t0=gs.length*step+380;
+  gs.forEach((g,i)=>inflate(g,i*step));
+  const t0=gs.length*step+560;
   // замочки на закреплённых фигурах — показать, что их не двигать
   setTimeout(()=>{const b=$('#board');if(!b)return;const lay=document.createElementNS(NS,'g');b.appendChild(lay);
     gs.forEach(g=>{const cells=cellsOf(G.grid,+g.dataset.pi);if(!cells.length)return;
