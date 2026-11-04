@@ -243,6 +243,7 @@ html,body{background:#000}
 .tutghost{position:absolute;left:0;top:0;z-index:24;pointer-events:none;display:none;opacity:.85}
 .wintitle{font-size:30px;font-weight:700;letter-spacing:-.3px;margin:2px 0 6px;background:linear-gradient(90deg,#FF5DB1,#FFC61A,#9ACD32,#1E9BE8);-webkit-background-clip:text;background-clip:text;color:transparent}
 .winballs{display:flex;justify-content:center;gap:14px;margin:8px 0 22px;height:96px;align-items:flex-start}
+.viewsw{display:flex;gap:6px;justify-content:center;margin-top:12px}.viewsw button{background:#232327;color:#A9A4B5;border-radius:12px;padding:7px 14px;font-size:15px;font-weight:600}.viewsw button.on{background:#F4F1EA;color:#1A1A1D}
 
 @media (max-width:559px){
   html,body{height:100%;overflow:hidden;position:fixed;inset:0}
@@ -272,6 +273,7 @@ body{-webkit-touch-callout:none}
       <button class="bigbtn green" id="btnPlay">Играть</button>
       <button class="ghostbtn" id="btnMap">Карта уровней</button>
       <button class="ghostbtn" id="btnRules">Как играть</button>
+      <div class="viewsw" id="viewSw"><button data-v="balloons">🎈 Шарики</button><button data-v="fruits">🍓 Фрукты</button></div>
       <div class="stats" id="homeStats"></div>
     </div>
   </section>
@@ -421,10 +423,18 @@ const flip=cells=>norm(cells.map(([r,c])=>[r,-c]));
 function cellsOf(sol,pi){const o=[];sol.forEach((v,i)=>{if(v===pi)o.push([Math.floor(i/W),i%W])});return o}
 function mix(a,b,t){const pa=[1,3,5].map(i=>parseInt(a.substr(i,2),16)),pb=[1,3,5].map(i=>parseInt(b.substr(i,2),16));return '#'+pa.map((v,i)=>Math.round(v+(pb[i]-v)*t).toString(16).padStart(2,'0')).join('')}
 
+/* ---------- Режим отображения: шарики или фрукты ---------- */
+const FRUITS=[
+ {k:'apple',c:'#7CC242'},{k:'orange',c:'#FF8C1A'},{k:'melon',c:'#F2385A'},{k:'lemon',c:'#FFD43B'},
+ {k:'blueberry',c:'#3F4FC4'},{k:'plum',c:'#7B2C9F'},{k:'peach',c:'#FFA36B'},{k:'cherry',c:'#C2185B'},
+ {k:'kiwi',c:'#8BC34A'},{k:'strawberry',c:'#E8322E'},{k:'lime',c:'#2E9E44'},{k:'coconut',c:'#8D5B3C'}];
+let VIEW=(()=>{try{return JSON.parse(localStorage.getItem('balls.v2')||'{}').view||'balloons'}catch(e){return 'balloons'}})();
+if(VIEW==='fruits')PIECES.forEach((p,i)=>p.color=FRUITS[i].c);
 (function(){const defs=$('#defs');
   const add=(id,col)=>{const g=document.createElementNS(NS,'radialGradient');g.id=id;g.setAttribute('cx','35%');g.setAttribute('cy','30%');g.setAttribute('r','75%');
     g.innerHTML=`<stop offset="0" stop-color="${mix(col,'#ffffff',.55)}"/><stop offset=".45" stop-color="${col}"/><stop offset="1" stop-color="${mix(col,'#000000',.35)}"/>`;defs.appendChild(g)};
   PIECES.forEach((p,i)=>add('g'+i,p.color));
+  FRUITS.forEach(f=>add('fg_'+f.k,f.c));
   // закреплённые фигуры: матовые и чуть темнее — «утоплены» в поле
   PIECES.forEach((p,i)=>{const g=document.createElementNS(NS,'radialGradient');g.id='f'+i;g.setAttribute('cx','50%');g.setAttribute('cy','45%');g.setAttribute('r','60%');
     g.innerHTML=`<stop offset="0" stop-color="${mix(p.color,'#000000',.18)}"/><stop offset=".8" stop-color="${mix(p.color,'#000000',.32)}"/><stop offset="1" stop-color="${mix(p.color,'#000000',.5)}"/>`;defs.appendChild(g)});
@@ -437,6 +447,49 @@ function bridgeCol(col){return lum(col)<.3?mix(col,'#ffffff',.18):mix(col,'#0000
 /* ---------- Фигура как надувной шарик для фигурок: сегменты, перекрутки, хвостик-завязка ---------- */
 let FIXED_STYLE='glass';
 function drawPiece(g,pi,cells,s,ox=0,oy=0,opts={}){
+  if(VIEW==='fruits')return drawFruitPiece(g,pi,cells,s,ox,oy,opts);
+  return drawBalloonPiece(g,pi,cells,s,ox,oy,opts)}
+function fruitSVG(k,x,y,s,col){
+  const r=s*.42, dk=mix(col,'#000000',.3), lt=mix(col,'#ffffff',.45), leaf='#4CAF50', leafD='#2E7D32', stem='#6D4C41';
+  const shine=`<ellipse cx="${x-r*.38}" cy="${y-r*.38}" rx="${r*.22}" ry="${r*.13}" transform="rotate(-35 ${x-r*.38} ${y-r*.38})" fill="#fff" opacity=".7"/>`;
+  const body=(rx=r,ry=r,dy=0)=>`<ellipse cx="${x}" cy="${y+dy}" rx="${rx}" ry="${ry}" fill="url(#fg_${k})"/>`;
+  const lf=(ax,ay,ang,sz=1)=>`<path d="M${ax} ${ay} q ${s*.14*sz} ${-s*.12*sz} ${s*.26*sz} ${-s*.02*sz} q ${-s*.1*sz} ${s*.12*sz} ${-s*.26*sz} ${s*.02*sz}z" fill="${leaf}" stroke="${leafD}" stroke-width="${s*.015}" transform="rotate(${ang} ${ax} ${ay})"/>`;
+  switch(k){
+   case 'apple':return body(r,r*.95,r*.05)+`<path d="M${x} ${y-r*.75} q ${s*.02} ${-s*.1} ${-s*.03} ${-s*.17}" stroke="${stem}" stroke-width="${s*.05}" stroke-linecap="round" fill="none"/>`+lf(x+s*.01,y-r*.8,-20)+shine;
+   case 'orange':{let d='';for(let i=0;i<9;i++){const a=i*2.4,rr=r*(.3+.5*((i*37)%10)/10);d+=`<circle cx="${x+Math.cos(a)*rr}" cy="${y+Math.sin(a)*rr}" r="${s*.012}" fill="${dk}" opacity=".5"/>`}
+     return body()+d+`<circle cx="${x}" cy="${y-r*.88}" r="${s*.035}" fill="${leafD}"/>`+lf(x,y-r*.88,-10,.8)+shine}
+   case 'lemon':return `<path d="M${x-r*1.05} ${y} Q ${x-r} ${y-r*.9} ${x} ${y-r*.85} Q ${x+r} ${y-r*.9} ${x+r*1.05} ${y} Q ${x+r} ${y+r*.9} ${x} ${y+r*.85} Q ${x-r} ${y+r*.9} ${x-r*1.05} ${y}Z" fill="url(#fg_${k})"/>`+`<circle cx="${x+r*1.02}" cy="${y}" r="${s*.03}" fill="${dk}"/>`+shine;
+   case 'blueberry':{let cr='';for(let i=0;i<5;i++){const a=-Math.PI/2+i*2*Math.PI/5;cr+=`<path d="M${x} ${y-r*.55} L ${x+Math.cos(a)*r*.22} ${y-r*.55+Math.sin(a)*r*.22}" stroke="${mix(col,'#000000',.55)}" stroke-width="${s*.03}" stroke-linecap="round"/>`}
+     return body()+`<circle cx="${x}" cy="${y-r*.55}" r="${r*.17}" fill="${mix(col,'#000000',.45)}"/>`+cr+`<ellipse cx="${x}" cy="${y}" rx="${r}" ry="${r}" fill="#fff" opacity=".08"/>`+shine}
+   case 'plum':return body(r*.95,r)+`<path d="M${x+r*.15} ${y-r*.9} Q ${x+r*.35} ${y} ${x+r*.1} ${y+r*.9}" stroke="${dk}" stroke-width="${s*.025}" fill="none" opacity=".6"/><path d="M${x+r*.1} ${y-r*.9} l ${s*.02} ${-s*.12}" stroke="${stem}" stroke-width="${s*.04}" stroke-linecap="round"/>`+shine;
+   case 'peach':return body()+`<path d="M${x-r*.05} ${y-r*.95} Q ${x-r*.35} ${y} ${x-r*.05} ${y+r*.95}" stroke="${dk}" stroke-width="${s*.03}" fill="none" opacity=".5"/>`+`<ellipse cx="${x+r*.35}" cy="${y+r*.15}" rx="${r*.45}" ry="${r*.55}" fill="#FF5A5F" opacity=".35"/>`+lf(x,y-r*.92,-30,.9)+shine;
+   case 'cherry':return body(r*.85,r*.85,r*.12)+`<path d="M${x} ${y-r*.65} Q ${x+s*.05} ${y-r*1.15} ${x+s*.2} ${y-r*1.3}" stroke="#5D8C2A" stroke-width="${s*.04}" stroke-linecap="round" fill="none"/>`+`<ellipse cx="${x-r*.32}" cy="${y-r*.2}" rx="${r*.2}" ry="${r*.12}" transform="rotate(-35 ${x-r*.32} ${y-r*.2})" fill="#fff" opacity=".7"/>`;
+   case 'strawberry':{let sd='';for(const [a,b] of [[-.4,-.2],[.1,-.3],[.45,-.05],[-.15,.15],[.25,.3],[-.45,.25],[0,.55],[.5,.45],[-.2,-.5]])sd+=`<ellipse cx="${x+a*r}" cy="${y+b*r}" rx="${s*.018}" ry="${s*.028}" fill="#FFE57F"/>`;
+     return `<path d="M${x-r} ${y-r*.45} Q ${x-r*1.02} ${y-r} ${x} ${y-r*.85} Q ${x+r*1.02} ${y-r} ${x+r} ${y-r*.45} Q ${x+r*.85} ${y+r*.6} ${x} ${y+r*1.05} Q ${x-r*.85} ${y+r*.6} ${x-r} ${y-r*.45}Z" fill="url(#fg_${k})"/>`+sd+
+       `<path d="M${x-r*.55} ${y-r*.8} L ${x-r*.15} ${y-r*.6} L ${x} ${y-r*1} L ${x+r*.15} ${y-r*.6} L ${x+r*.55} ${y-r*.8} L ${x+r*.25} ${y-r*.5} L ${x-r*.25} ${y-r*.5}Z" fill="${leaf}" stroke="${leafD}" stroke-width="${s*.015}" stroke-linejoin="round"/>`+shine}
+   case 'melon':{let sd='';for(const [a,b] of [[-.35,.1],[0,.25],[.35,.1],[-.15,-.2],[.18,-.2]])sd+=`<ellipse cx="${x+a*r}" cy="${y+b*r}" rx="${s*.02}" ry="${s*.035}" fill="#2B1B17"/>`;
+     return `<circle cx="${x}" cy="${y}" r="${r}" fill="#2E7D32"/><circle cx="${x}" cy="${y}" r="${r*.88}" fill="#C5E1A5"/><circle cx="${x}" cy="${y}" r="${r*.8}" fill="url(#fg_${k})"/>`+sd}
+   case 'kiwi':{let sd='';for(let i=0;i<10;i++){const a=i/10*Math.PI*2;sd+=`<ellipse cx="${x+Math.cos(a)*r*.38}" cy="${y+Math.sin(a)*r*.38}" rx="${s*.014}" ry="${s*.03}" transform="rotate(${a*180/Math.PI+90} ${x+Math.cos(a)*r*.38} ${y+Math.sin(a)*r*.38})" fill="#1B1B1B"/>`}
+     return `<circle cx="${x}" cy="${y}" r="${r}" fill="#8D6E63"/><circle cx="${x}" cy="${y}" r="${r*.88}" fill="url(#fg_${k})"/><circle cx="${x}" cy="${y}" r="${r*.22}" fill="#F1F8E9"/>`+sd}
+   case 'lime':{let sg='';for(let i=0;i<8;i++){const a=i/8*Math.PI*2;sg+=`<line x1="${x}" y1="${y}" x2="${x+Math.cos(a)*r*.72}" y2="${y+Math.sin(a)*r*.72}" stroke="#F1F8E9" stroke-width="${s*.025}" opacity=".9"/>`}
+     return `<circle cx="${x}" cy="${y}" r="${r}" fill="${col}"/><circle cx="${x}" cy="${y}" r="${r*.84}" fill="#E8F5C8"/><circle cx="${x}" cy="${y}" r="${r*.76}" fill="url(#fg_${k})"/>`+sg+`<circle cx="${x}" cy="${y}" r="${r*.08}" fill="#F1F8E9"/>`}
+   case 'coconut':return `<circle cx="${x}" cy="${y}" r="${r}" fill="url(#fg_${k})"/><circle cx="${x}" cy="${y}" r="${r*.72}" fill="#FFF8EC"/><circle cx="${x}" cy="${y}" r="${r*.5}" fill="#F3E9D7"/>`+
+     [[-.55,-.6],[-.2,-.8],[.3,-.75],[.65,-.45]].map(([a,b])=>`<path d="M${x+a*r} ${y+b*r} l ${s*.03} ${s*.015}" stroke="#5D3A23" stroke-width="${s*.02}" stroke-linecap="round"/>`).join('');
+  }return body()}
+function drawFruitPiece(g,pi,cells,s,ox=0,oy=0,opts={}){
+  const f=FRUITS[pi],col=f.c,set=new Set(cells.map(c=>c+''));const has=(r,c)=>set.has([r,c]+'');const ghost=!!opts.fixed;
+  let vine='',sh='',fr='';
+  // веточка, соединяющая фрукты одной фигуры
+  for(const [r,c] of cells)for(const [a,b] of [[0,1],[1,0]])if(has(r+a,c+b)){
+    const x1=ox+c*s+s/2,y1=oy+r*s+s/2,x2=x1+b*s,y2=y1+a*s,mx=(x1+x2)/2+a*s*.08,my=(y1+y2)/2-b*s*.08;
+    vine+=`<path d="M${x1} ${y1} Q ${mx} ${my} ${x2} ${y2}" stroke="#558B2F" stroke-width="${s*.09}" stroke-linecap="round" fill="none"/><path d="M${x1} ${y1} Q ${mx} ${my} ${x2} ${y2}" stroke="#8BC34A" stroke-width="${s*.035}" stroke-linecap="round" fill="none"/>`+
+      `<path d="M${(x1+x2)/2} ${(y1+y2)/2} q ${s*.1} ${-s*.1} ${s*.2} ${-s*.02} q ${-s*.08} ${s*.1} ${-s*.2} ${s*.02}z" fill="#66BB6A" stroke="#2E7D32" stroke-width="${s*.012}" transform="rotate(${b?-60:30} ${(x1+x2)/2} ${(y1+y2)/2})"/>`}
+  for(const [r,c] of cells){const x=ox+c*s+s/2,y=oy+r*s+s/2;
+    if(!ghost&&!opts.flat)sh+=`<ellipse cx="${x+s*.03}" cy="${y+s*.07}" rx="${s*.4}" ry="${s*.38}" fill="#000" opacity=".35"/>`;
+    fr+=fruitSVG(f.k,x,y,s,col)}
+  g.insertAdjacentHTML('beforeend',ghost?`<g opacity=".42">${vine+fr}</g>`:sh+vine+fr);
+}
+function drawBalloonPiece(g,pi,cells,s,ox=0,oy=0,opts={}){
   const col=PIECES[pi].color, set=new Set(cells.map(c=>c+''));const has=(r,c)=>set.has([r,c]+'');
   const fixedAny=!!opts.fixed, glass=fixedAny&&FIXED_STYLE==='glass', fixed=fixedAny&&!glass;
   const fill=fixed?`url(#f${pi})`:`url(#g${pi})`;
@@ -982,6 +1035,7 @@ $('#loseSkip').onclick=()=>withAd(()=>skipLevel());
 let tt;function toast(m){const t=$('#toast');t.textContent=m;t.classList.add('on');clearTimeout(tt);tt=setTimeout(()=>t.classList.remove('on'),1700)}
 
 renderHome();refreshWallet();
+document.querySelectorAll('#viewSw button').forEach(b=>{b.classList.toggle('on',b.dataset.v===VIEW);b.onclick=()=>{if(b.dataset.v===VIEW)return;S0.view=b.dataset.v;save();location.reload()}});
 (function(){const h=location.hash.slice(1);if(h==='map'||h==='rules')go(h);else if(/^level-\d+$/.test(h))startLevel(Math.min(+h.split('-')[1],LEVELS.length))})();
 </script>
 <script>
