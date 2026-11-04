@@ -436,7 +436,7 @@ function drawPiece(g,pi,cells,s,ox=0,oy=0,opts={}){
   const col=PIECES[pi].color, set=new Set(cells.map(c=>c+''));const has=(r,c)=>set.has([r,c]+'');
   const fixed=!!opts.fixed, fill=fixed?`url(#f${pi})`:`url(#g${pi})`;
   const dark=mix(col,'#000000',fixed?.55:.38), lite=mix(col,'#ffffff',fixed?.05:.3);
-  let sh='',seg='',kn='',tl='';
+  let sh='',seg='',kn='',tl='',neck='';
   const nbs=(r,c)=>[[0,1],[1,0],[0,-1],[-1,0]].filter(([a,b])=>has(r+a,c+b));
   // хвостик — на конце «колбаски» (клетка с одним соседом), первой по порядку
   const ends=cells.filter(([r,c])=>nbs(r,c).length===1).sort((a,b)=>a[0]-b[0]||a[1]-b[1]);
@@ -463,20 +463,19 @@ function drawPiece(g,pi,cells,s,ox=0,oy=0,opts={}){
   if(!opts.noTail){const [r,c]=tail;const nb=nbs(r,c)[0]||[0,1];
     const ux=-nb[1], uy=-nb[0]; // наружу от соседа
     const px=-uy, py=ux;        // перпендикуляр
-    const bx=ox+c*s+s/2+ux*s*.44, by=oy+r*s+s/2+uy*s*.44; // основание на краю сегмента
-    const kx=bx+ux*s*.13, ky=by+uy*s*.13;                  // узел
-    const mx=kx+ux*s*.26-px*s*.1, my=ky+uy*s*.26-py*s*.1;  // изгиб
-    const tx=kx+ux*s*.3+px*s*.2, ty=ky+uy*s*.3+py*s*.2;    // кончик загнут вбок
-    const tcol=fixed?mix(col,'#000000',.3):col;
-    // «горлышко» к узлу
-    tl+=`<path d="M${bx+px*s*.13} ${by+py*s*.13} Q ${bx+ux*s*.06} ${by+uy*s*.06} ${kx} ${ky} Q ${bx+ux*s*.06} ${by+uy*s*.06} ${bx-px*s*.13} ${by-py*s*.13} Z" fill="${tcol}"/>`;
-    // закрученный кончик: тёмный контур + цвет фигуры
-    tl+=`<path d="M${kx} ${ky} Q ${mx} ${my} ${tx} ${ty}" stroke="${dark}" stroke-width="${s*.13}" stroke-linecap="round" fill="none"/>`;
-    tl+=`<path d="M${kx} ${ky} Q ${mx} ${my} ${tx} ${ty}" stroke="${tcol}" stroke-width="${s*.075}" stroke-linecap="round" fill="none"/>`;
-    // узел-завязка
-    tl+=`<circle cx="${kx}" cy="${ky}" r="${s*.13}" fill="${dark}"/><circle cx="${kx}" cy="${ky}" r="${s*.095}" fill="${tcol}"/><circle cx="${kx-s*.035}" cy="${ky-s*.035}" r="${s*.04}" fill="#fff" opacity="${fixed?.25:.75}"/>`;
+    const tcol=fixed?mix(col,'#000000',.32):col, tdk=mix(col,'#000000',fixed?.55:.32), tlt=mix(col,'#ffffff',fixed?.05:.35);
+    const ex=ox+c*s+s/2, ey=oy+r*s+s/2;
+    // сужение к горлышку — рисуется ПОД шариком, наружу выходит только конус
+    const b0x=ex+ux*s*.3, b0y=ey+uy*s*.3, b1x=ex+ux*s*.53, b1y=ey+uy*s*.53, nc=mix(col,'#000000',fixed?.42:.16);
+    neck+=`<path d="M${b0x+px*s*.26} ${b0y+py*s*.26} Q ${b1x+px*s*.1} ${b1y+py*s*.1} ${b1x+px*s*.045} ${b1y+py*s*.045} L ${b1x-px*s*.045} ${b1y-py*s*.045} Q ${b1x-px*s*.1} ${b1y-py*s*.1} ${b0x-px*s*.26} ${b0y-py*s*.26} Z" fill="${nc}"/>`;
+    // скатанный ободок-«попка»
+    const kx=ex+ux*s*.56, ky=ey+uy*s*.56;
+    const krx=ux?s*.055:s*.1, kry=uy?s*.055:s*.1;
+    tl+=`<ellipse cx="${kx}" cy="${ky}" rx="${krx}" ry="${kry}" fill="${tdk}"/>`;
+    tl+=`<ellipse cx="${kx-ux*s*.012}" cy="${ky-uy*s*.012}" rx="${krx*.8}" ry="${kry*.8}" fill="${tcol}"/>`;
+    tl+=`<ellipse cx="${kx-ux*s*.02-px*s*.035}" cy="${ky-uy*s*.02-py*s*.035}" rx="${s*.025}" ry="${s*.018}" fill="${tlt}" opacity="${fixed?.3:.8}"/>`;
   }
-  g.insertAdjacentHTML('beforeend',sh+seg+kn+tl);
+  g.insertAdjacentHTML('beforeend',sh+neck+seg+kn+tl);
 }
 function boardSvg(svg,s){svg.setAttribute('viewBox',`0 0 ${W*s} ${H*s}`);let h='';
   for(let r=0;r<H;r++)for(let c=0;c<W;c++)h+=`<circle cx="${c*s+s/2}" cy="${r*s+s/2}" r="${s*.36}" fill="url(#hole)"/>`;svg.innerHTML=h}
