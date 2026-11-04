@@ -222,6 +222,26 @@ html,body{background:#000}
 .slot{touch-action:none}
 #tray{touch-action:pan-y}
 
+#board .bp{transform-box:fill-box;transform-origin:center}
+#board .bp.mine{filter:drop-shadow(0 3px 3px rgba(0,0,0,.55))}
+.lockbadge{transform-box:fill-box;transform-origin:center}
+/* обучение */
+.tut{position:absolute;inset:0;z-index:25;pointer-events:none;display:none}
+.tut.on{display:block}
+.tutcard{position:absolute;left:14px;right:14px;bottom:calc(84px + env(safe-area-inset-bottom));background:#F4F1EA;color:#1A1A1D;border-radius:20px;padding:16px 16px 14px;box-shadow:0 10px 30px rgba(0,0,0,.6);pointer-events:auto;animation:pop .3s cubic-bezier(.3,1.4,.5,1)}
+.tutcard.top{bottom:auto;top:calc(104px + env(safe-area-inset-top))}
+.tutcard .step{font-size:12px;font-weight:600;color:#7A7489;letter-spacing:.5px;text-transform:uppercase}
+.tutcard h3{margin:4px 0 4px;font-size:19px;line-height:1.2}
+.tutcard.top .row{flex-wrap:wrap}
+.tutcard p{margin:0;font-size:15px;line-height:1.35;color:#3A3644}
+.tutcard .row{display:flex;gap:8px;margin-top:12px;align-items:center}
+.tutcard button{border-radius:12px;padding:10px 14px;font-size:15px;font-weight:600}
+.tutcard .go{background:#58B800;color:#fff;box-shadow:0 3px 0 #2F6500;margin-left:auto}
+.tutcard .skip{background:transparent;color:#7A7489}
+.tutcard .dots{display:flex;gap:5px}.tutcard .dots i{width:7px;height:7px;border-radius:50%;background:#D5CFC2}.tutcard .dots i.on{background:#58B800}
+.tuthand{position:absolute;left:0;top:0;font-size:38px;z-index:26;pointer-events:none;display:none;filter:drop-shadow(0 4px 6px rgba(0,0,0,.6))}
+.tutghost{position:absolute;left:0;top:0;z-index:24;pointer-events:none;display:none;opacity:.85}
+
 @media (max-width:559px){
   html,body{height:100%;overflow:hidden;position:fixed;inset:0}
   .app{width:100vw;height:100dvh}
@@ -285,7 +305,7 @@ body{-webkit-touch-callout:none}
   <section class="screen" id="rules">
     <div class="topbar"><button class="iconbtn" data-go="home">‹</button><div class="title">Как играть</div></div>
     <div style="overflow:auto;flex:1">
-      <div class="rule"><div class="n">1</div><p>На поле уже стоят некоторые фигуры — их нельзя двигать.</p></div>
+      <div class="rule"><div class="n">1</div><p>На поле уже стоят <b>матовые</b> фигуры — они закреплены, их нельзя двигать. Ваши фигуры — глянцевые.</p></div>
       <div class="rule"><div class="n">2</div><p>Перетащите остальные фигуры на поле. Тап по фигуре внизу — выбрать, ещё тап — повернуть. Кнопки <b>↻</b> и <b>⇋</b> — поворот и отражение.</p></div>
       <div class="rule"><div class="n">3</div><p>Тап по своей фигуре на поле — она вернётся вниз.</p></div>
       <div class="rule"><div class="n">4</div><p>Заполните все 55 лунок. Время не ограничено. Без подсказок — 3 звезды.</p></div>
@@ -295,6 +315,9 @@ body{-webkit-touch-callout:none}
   </section>
 
   <svg id="ghost"></svg>
+  <div class="tut" id="tut"><div class="tutcard" id="tutCard"></div></div>
+  <svg class="tutghost" id="tutGhost"></svg>
+  <div class="tuthand" id="tutHand">👆</div>
 
   <!-- Level preview sheet -->
   <div class="modal" id="mPreview"><div class="sheet">
@@ -313,6 +336,7 @@ body{-webkit-touch-callout:none}
     <button class="menuitem" id="hHint"><span class="ic">💡</span>Подсказка<span class="r" id="hHintR">осталось 3</span></button>
     <button class="menuitem" id="hSkip"><span class="ic">⏭</span>Пропустить уровень<span class="r">▶ реклама</span></button>
     <button class="menuitem" id="hRestart"><span class="ic">⟲</span>Начать заново<span class="r"></span></button>
+    <button class="menuitem" id="hTut"><span class="ic">🎓</span>Как играть — показать<span class="r"></span></button>
     <button class="ghostbtn" data-close style="margin-top:14px">Продолжить играть</button>
   </div></div>
 
@@ -398,6 +422,9 @@ function mix(a,b,t){const pa=[1,3,5].map(i=>parseInt(a.substr(i,2),16)),pb=[1,3,
   const add=(id,col)=>{const g=document.createElementNS(NS,'radialGradient');g.id=id;g.setAttribute('cx','35%');g.setAttribute('cy','30%');g.setAttribute('r','75%');
     g.innerHTML=`<stop offset="0" stop-color="${mix(col,'#ffffff',.55)}"/><stop offset=".45" stop-color="${col}"/><stop offset="1" stop-color="${mix(col,'#000000',.35)}"/>`;defs.appendChild(g)};
   PIECES.forEach((p,i)=>add('g'+i,p.color));
+  // закреплённые фигуры: матовые и чуть темнее — «утоплены» в поле
+  PIECES.forEach((p,i)=>{const g=document.createElementNS(NS,'radialGradient');g.id='f'+i;g.setAttribute('cx','50%');g.setAttribute('cy','45%');g.setAttribute('r','60%');
+    g.innerHTML=`<stop offset="0" stop-color="${mix(p.color,'#000000',.18)}"/><stop offset=".8" stop-color="${mix(p.color,'#000000',.32)}"/><stop offset="1" stop-color="${mix(p.color,'#000000',.5)}"/>`;defs.appendChild(g)});
   const h=document.createElementNS(NS,'radialGradient');h.id='hole';h.setAttribute('cx','50%');h.setAttribute('cy','35%');
   h.innerHTML='<stop offset="0" stop-color="#1a1718"/><stop offset="1" stop-color="#4a4243"/>';defs.appendChild(h);
 })();
@@ -407,9 +434,11 @@ function bridgeCol(col){return lum(col)<.3?mix(col,'#ffffff',.18):mix(col,'#0000
 function drawPiece(g,pi,cells,s,ox=0,oy=0,opts={}){
   const col=PIECES[pi].color, set=new Set(cells.map(c=>c+''));let html='';
   for(const [r,c] of cells){const cx=ox+c*s+s/2, cy=oy+r*s+s/2;
-    if(set.has([r,c+1]+''))html+=`<rect x="${cx}" y="${cy-s*.2}" width="${s}" height="${s*.4}" rx="${s*.12}" fill="${bridgeCol(col)}"/>`;
-    if(set.has([r+1,c]+''))html+=`<rect x="${cx-s*.2}" y="${cy}" width="${s*.4}" height="${s}" rx="${s*.12}" fill="${bridgeCol(col)}"/>`;}
+    const bc=opts.fixed?mix(col,'#000000',.45):bridgeCol(col);
+    if(set.has([r,c+1]+''))html+=`<rect x="${cx}" y="${cy-s*.2}" width="${s}" height="${s*.4}" rx="${s*.12}" fill="${bc}"/>`;
+    if(set.has([r+1,c]+''))html+=`<rect x="${cx-s*.2}" y="${cy}" width="${s*.4}" height="${s}" rx="${s*.12}" fill="${bc}"/>`;}
   for(const [r,c] of cells){const cx=ox+c*s+s/2, cy=oy+r*s+s/2;
+    if(opts.fixed){html+=`<circle cx="${cx}" cy="${cy}" r="${s*.42}" fill="url(#f${pi})"/><circle cx="${cx}" cy="${cy}" r="${s*.42}" fill="none" stroke="#000" stroke-opacity=".35" stroke-width="${s*.05}"/>`;continue}
     html+=`<circle cx="${cx}" cy="${cy}" r="${s*.44}" fill="url(#g${pi})"/>`;
     if(!opts.flat)html+=`<ellipse cx="${cx-s*.12}" cy="${cy-s*.16}" rx="${s*.13}" ry="${s*.08}" fill="#fff" opacity=".55"/>`;}
   g.insertAdjacentHTML('beforeend',html);
@@ -593,7 +622,8 @@ function startLevel(n){
   $('#gCat').textContent=CATS.find(c=>c.id===L.cat).name;$('#gCat').style.background=CAT_HEX[L.cat];$('#gCat').style.color='#fff';
   
   document.querySelectorAll('.screen').forEach(e=>e.classList.toggle('on',e.id==='game'));
-  render();fitBoard();startTimer();refreshWallet();
+  render();fitBoard();startTimer();refreshWallet();introAnim();
+  if(!S0.tut&&!window.NO_TUT)setTimeout(()=>tutStart(),1500);
 }
 let lastTick=0;
 function startTimer(){stopTimer();lastTick=Date.now();timerId=setInterval(tick,250);paintTime()}
@@ -617,7 +647,9 @@ function fitBoard(){
 window.addEventListener('resize',()=>{if(G)fitBoard()});
 function render(){
   const b=$('#board');boardSvg(b,S);const g=document.createElementNS(NS,'g');b.appendChild(g);
-  for(let pi=0;pi<12;pi++){const cells=cellsOf(G.grid,pi);if(cells.length)drawPiece(g,pi,cells,S)}
+  for(let pi=0;pi<12;pi++){const cells=cellsOf(G.grid,pi);if(!cells.length)continue;
+    const pg=document.createElementNS(NS,'g');pg.setAttribute('class','bp'+(G.fixed.has(pi)?' fixed':' mine'));pg.dataset.pi=pi;g.appendChild(pg);
+    drawPiece(pg,pi,cells,S,0,0,{fixed:G.fixed.has(pi)})}
   const prev=document.createElementNS(NS,'g');prev.id='preview';b.appendChild(prev);
   const tray=$('#tray');tray.innerHTML='';
   G.free.forEach(pi=>{const d=document.createElement('div');const on=G.onBoard[pi];
@@ -631,8 +663,91 @@ function render(){
 }
 function canPlace(cells,r0,c0){return cells.every(([r,c])=>{const R=r0+r,C=c0+c;return R>=0&&R<H&&C>=0&&C<W&&G.grid[R*W+C]===-1})}
 function place(pi,cells,r0,c0){cells.forEach(([r,c])=>G.grid[(r0+r)*W+c0+c]=pi);G.onBoard[pi]=true;G.shape[pi]=cells;G.moves++;G.lastMove=Date.now();
-  G.sel=G.free.find(p=>!G.onBoard[p]);render();checkWin()}
+  G.sel=G.free.find(p=>!G.onBoard[p]);render();if(TUT)tutOnPlace();checkWin()}
 function lift(pi){G.grid=G.grid.map(v=>v===pi?-1:v);delete G.onBoard[pi]}
+
+/* ---------- Открытие уровня: закреплённые фигуры заполняют поле, пустые лунки подсвечиваются ---------- */
+function introAnim(){
+  const reduce=window.matchMedia&&matchMedia('(prefers-reduced-motion: reduce)').matches;if(reduce)return;
+  const gs=[...document.querySelectorAll('#board .bp.fixed')];
+  // порядок: сверху вниз, как будто укладываем
+  gs.sort((a,b)=>Math.min(...cellsOf(G.grid,+a.dataset.pi).map(c=>c[0]))-Math.min(...cellsOf(G.grid,+b.dataset.pi).map(c=>c[0])));
+  const step=Math.min(90,700/Math.max(1,gs.length));
+  gs.forEach((g,i)=>g.animate([{transform:'translateY(-40px) scale(.85)',opacity:0},{transform:'translateY(3px) scale(1.02)',opacity:1,offset:.7},{transform:'none',opacity:1}],
+    {duration:420,delay:i*step,easing:'cubic-bezier(.3,.9,.4,1)',fill:'backwards'}));
+  const t0=gs.length*step+380;
+  // замочки на закреплённых фигурах — показать, что их не двигать
+  setTimeout(()=>{const b=$('#board');if(!b)return;const lay=document.createElementNS(NS,'g');b.appendChild(lay);
+    gs.forEach(g=>{const cells=cellsOf(G.grid,+g.dataset.pi);if(!cells.length)return;
+      // центр — ближайший к центру масс шарик
+      const cr=cells.reduce((a,c)=>a+c[0],0)/cells.length,cc=cells.reduce((a,c)=>a+c[1],0)/cells.length;
+      const [r,c]=cells.reduce((b,x)=>Math.hypot(x[0]-cr,x[1]-cc)<Math.hypot(b[0]-cr,b[1]-cc)?x:b);
+      lay.insertAdjacentHTML('beforeend',`<g class="lockbadge"><circle cx="${c*S+S/2}" cy="${r*S+S/2}" r="${S*.27}" fill="rgba(0,0,0,.55)"/>${lockIcon(c*S+S/2,r*S+S/2,S*.26)}</g>`)});
+    lay.animate([{opacity:0},{opacity:1,offset:.15},{opacity:1,offset:.75},{opacity:0}],{duration:1500,fill:'forwards'}).onfinish=()=>lay.remove();
+    // пульс пустых лунок
+    const pv=$('#preview');if(!pv)return;const e=document.createElementNS(NS,'g');pv.appendChild(e);
+    G.grid.forEach((v,i)=>{if(v!==-1)return;const r=Math.floor(i/W),c=i%W;e.insertAdjacentHTML('beforeend',`<circle cx="${c*S+S/2}" cy="${r*S+S/2}" r="${S*.38}" fill="none" stroke="#9BC21C" stroke-width="2.5"/>`)});
+    e.animate([{opacity:0},{opacity:1},{opacity:0},{opacity:1},{opacity:0}],{duration:1400,fill:'forwards'}).onfinish=()=>e.remove();
+  },t0);
+}
+function flashLock(r,c){const b=$('#board');const g=document.createElementNS(NS,'g');g.innerHTML=`<circle cx="${c*S+S/2}" cy="${r*S+S/2}" r="${S*.3}" fill="rgba(0,0,0,.6)"/>`+lockIcon(c*S+S/2,r*S+S/2,S*.28);b.appendChild(g);g.animate([{opacity:0},{opacity:1,offset:.2},{opacity:1,offset:.7},{opacity:0}],{duration:1100,fill:'forwards'}).onfinish=()=>g.remove()}
+function lockIcon(x,y,s){ // небольшой замок
+  return `<g transform="translate(${x-s/2},${y-s/2}) scale(${s/24})"><path d="M7 11V8a5 5 0 0 1 10 0v3" fill="none" stroke="#F4F1EA" stroke-width="2.6" stroke-linecap="round"/><rect x="5" y="10.5" width="14" height="11" rx="2.5" fill="#F4F1EA"/><circle cx="12" cy="16" r="1.8" fill="#333"/></g>`}
+
+/* ---------- Обучение (первый запуск, уровень 1) ---------- */
+let TUT=null;
+function tutStart(){
+  if(!G||G.done)return;TUT={step:0,placed:0};pauseTimer();renderTut()}
+function tutEnd(){TUT=null;S0.tut=true;save();$('#tut').classList.remove('on');stopHand();resumeTimer();const pv=$('#preview');if(pv)pv.querySelectorAll('.tuttarget').forEach(e=>e.remove())}
+function renderTut(){
+  const steps=[
+    {h:'Заполните все пустые лунки',p:'Матовые фигуры закреплены 🔒. Пустые лунки заполните фигурами справа.',btn:'Понятно'},
+    {h:'Перетащите фигуру',p:'Зажмите фигуру справа и тяните на подсвеченные лунки.',btn:null},
+    {h:'Поворачивайте фигуры',p:'Тап по фигуре справа — поворот. <b>↻</b> и <b>⇋</b> внизу — поворот и зеркало. Застряли — 💡.',btn:'Играть'},
+  ];
+  const st=steps[TUT.step];$('#tut').classList.add('on');
+  // карточка — с той стороны, где нет пустых лунок, чтобы не закрывать цель и руку
+  const empt=[];G.grid.forEach((v,i)=>{if(v===-1)empt.push(Math.floor(i/W))});
+  const low=empt.length&&empt.reduce((a,b)=>a+b,0)/empt.length>(H-1)/2;
+  const card=$('#tutCard');card.classList.toggle('top',!!low);
+  // сверху — не залезаем на колонку фигур справа
+  const ar=$('#app').getBoundingClientRect(),tr=$('#tray').getBoundingClientRect();
+  card.style.right=(low&&TUT.step>0)?Math.max(14,ar.right-tr.left+8)+'px':'';
+  $('#tutCard').innerHTML=`<div class="step">Шаг ${TUT.step+1} из ${steps.length}</div><h3>${st.h}</h3><p>${st.p}</p>
+    <div class="row"><div class="dots">${steps.map((_,i)=>`<i class="${i===TUT.step?'on':''}"></i>`).join('')}</div>
+    <button class="skip" id="tutSkip">Пропустить</button>${st.btn?`<button class="go" id="tutGo">${st.btn}</button>`:''}</div>`;
+  $('#tutSkip').onclick=()=>tutEnd();
+  if(st.btn)$('#tutGo').onclick=()=>{if(TUT.step===0){TUT.step=1;renderTut()}else tutEnd()};
+  stopHand();
+  if(TUT.step===0){ // подсветить пустые лунки
+    const pv=$('#preview');if(pv){const e=document.createElementNS(NS,'g');e.setAttribute('class','tuttarget');pv.appendChild(e);
+      G.grid.forEach((v,i)=>{if(v!==-1)return;const r=Math.floor(i/W),c=i%W;e.insertAdjacentHTML('beforeend',`<circle cx="${c*S+S/2}" cy="${r*S+S/2}" r="${S*.4}" fill="none" stroke="#9BC21C" stroke-width="3"/>`)});
+      e.animate([{opacity:.25},{opacity:1},{opacity:.25}],{duration:1300,iterations:Infinity})}
+  }else{const pv=$('#preview');if(pv)pv.querySelectorAll('.tuttarget').forEach(e=>e.remove())}
+  if(TUT.step===1)showHand();
+}
+let handAnim=null;
+function showHand(){
+  // первая неуложенная фигура: развернём её как в решении, чтобы встала с первого раза
+  const pi=G.free.find(p=>!G.onBoard[p]);if(pi==null)return;
+  const target=cellsOf(G.sol,pi);G.shape[pi]=norm(target);G.sel=pi;render();
+  const pv=$('#preview');const e=document.createElementNS(NS,'g');e.setAttribute('class','tuttarget');pv.appendChild(e);
+  target.forEach(([r,c])=>e.insertAdjacentHTML('beforeend',`<circle cx="${c*S+S/2}" cy="${r*S+S/2}" r="${S*.44}" fill="none" stroke="#FFC61A" stroke-width="3" stroke-dasharray="5 4"/>`));
+  e.animate([{opacity:.3},{opacity:1},{opacity:.3}],{duration:1100,iterations:Infinity});
+  const slot=document.querySelector(`.slot[data-pi="${pi}"]`);if(!slot)return;
+  const a=$('#app').getBoundingClientRect(),sr=slot.getBoundingClientRect(),m=boardMetrics();
+  const cells=G.shape[pi],h=Math.max(...cells.map(c=>c[0]))+1,w=Math.max(...cells.map(c=>c[1]))+1;
+  const mr=Math.min(...target.map(c=>c[0])),mc=Math.min(...target.map(c=>c[1]));
+  const gh=$('#tutGhost');gh.setAttribute('viewBox',`0 0 ${w*S} ${h*S}`);gh.style.width=w*m.cell+'px';gh.style.height=h*m.cell+'px';gh.innerHTML='';drawPiece(gh,pi,cells,S);
+  const sx=sr.left-a.left+sr.width/2-w*m.cell/2, sy=sr.top-a.top+sr.height/2-h*m.cell/2;
+  const tx=m.x+mc*m.cell, ty=m.y+mr*m.cell;
+  const hand=$('#tutHand');gh.style.display='block';hand.style.display='block';
+  const kf=(x,y,sc,o)=>({transform:`translate(${x}px,${y}px) scale(${sc})`,opacity:o});
+  handAnim=[gh.animate([kf(sx,sy,.55,0),kf(sx,sy,.55,.9),kf(tx,ty,1,.9),kf(tx,ty,1,0)],{duration:2200,iterations:Infinity,easing:'ease-in-out'}),
+    hand.animate([kf(sx+w*m.cell*.45,sy+h*m.cell*.4,1,0),kf(sx+w*m.cell*.45,sy+h*m.cell*.4,1,1),kf(tx+w*m.cell*.5,ty+h*m.cell*.55,1,1),kf(tx+w*m.cell*.5,ty+h*m.cell*.55,1,0)],{duration:2200,iterations:Infinity,easing:'ease-in-out'})];
+}
+function stopHand(){if(handAnim)handAnim.forEach(a=>a.cancel());handAnim=null;$('#tutGhost').style.display='none';$('#tutHand').style.display='none'}
+function tutOnPlace(){if(!TUT)return;if(TUT.step===1){TUT.step=2;stopHand();renderTut()}}
 
 /* ---------- drag & drop ---------- */
 const ghost=$('#ghost');let drag=null;
@@ -655,13 +770,13 @@ $('#tray').addEventListener('pointerdown',e=>{
   if(G.hintPick){e.preventDefault();pickHint(+slot.dataset.pi);return}
   const pi=+slot.dataset.pi,cells=G.shape[pi];const h=Math.max(...cells.map(c=>c[0]))+1,w=Math.max(...cells.map(c=>c[1]))+1;
   const ctr=[(h-1)/2,(w-1)/2];const grab=cells.reduce((b,c)=>Math.hypot(c[0]-ctr[0],c[1]-ctr[1])<Math.hypot(b[0]-ctr[0],b[1]-ctr[1])?c:b);
-  beginDrag(e,pi,cells,grab);drag.from='tray';hideNudge();e.preventDefault();
+  beginDrag(e,pi,cells,grab);drag.from='tray';hideNudge();if(TUT&&TUT.step===1)stopHand();e.preventDefault();
 });
 $('#board').addEventListener('pointerdown',e=>{
   if(G.done)return;const m=boardMetrics(),p=appPoint(e);const c=Math.floor((p.x-m.x)/m.cell),r=Math.floor((p.y-m.y)/m.cell);
   if(r<0||r>=H||c<0||c>=W)return;const pi=G.grid[r*W+c];if(pi<0)return;
   if(G.hintPick&&!G.fixed.has(pi)){e.preventDefault();pickHint(pi);return}
-  if(G.fixed.has(pi)){const bw=$('.boardwrap');bw.classList.remove('shake');void bw.offsetWidth;bw.classList.add('shake');toast('Эта фигура закреплена');return}
+  if(G.fixed.has(pi)){const bw=$('.boardwrap');bw.classList.remove('shake');void bw.offsetWidth;bw.classList.add('shake');toast('🔒 Эта фигура закреплена');flashLock(r,c);return}
   const abs=cellsOf(G.grid,pi);const mr=Math.min(...abs.map(c=>c[0])),mc=Math.min(...abs.map(c=>c[1]));
   const cells=norm(abs);beginDrag(e,pi,cells,[r-mr,c-mc]);drag.from='board';drag.lift=0;
   lift(pi);G.shape[pi]=cells;render();showGhost(p);e.preventDefault();
@@ -677,7 +792,7 @@ window.addEventListener('pointerup',endDrag);window.addEventListener('pointercan
 $('#cRot').onclick=()=>{if(G.sel==null||G.onBoard[G.sel])return;G.shape[G.sel]=rot(G.shape[G.sel]);render()};
 $('#cFlip').onclick=()=>{if(G.sel==null||G.onBoard[G.sel])return;G.shape[G.sel]=flip(G.shape[G.sel]);render()};
 $('#cReset').onclick=()=>{G.free.forEach(pi=>{if(G.onBoard[pi])lift(pi)});G.sel=G.free[0];render();toast('Поле очищено')};
-$('#gBack').onclick=()=>go('map');
+$('#gBack').onclick=()=>{if(TUT){TUT=null;$('#tut').classList.remove('on');stopHand()}go('map')};
 
 /* ---------- Бусик: помощь ---------- */
 $('#gMascot').onclick=()=>{if(G.done)return;hideNudge();pauseTimer();
@@ -688,6 +803,7 @@ $('#gMascot').onclick=()=>{if(G.done)return;hideNudge();pauseTimer();
 $('#hHint').onclick=()=>{if(S0.hints>0){closeAll();startHintPick('wallet')}else{$('#nhMascot').innerHTML=mascot('sad',90);openM('#mNoHints')}};
 $('#hSkip').onclick=()=>withAd(()=>skipLevel());
 $('#hRestart').onclick=()=>startLevel(G.L.n);
+$('#hTut').onclick=()=>{closeAll();tutStart()};
 $('#nhAd').onclick=()=>showAd(()=>{closeAll();startHintPick('ad')});
 $('#hintCancel').onclick=()=>{const paid=G.hintPick;endHintPick();if(paid==='ad'){S0.hints++;save();refreshWallet();toast('Подсказка сохранена на потом')}};
 $('#nhShop').onclick=()=>openShop();
