@@ -98,21 +98,21 @@ button{font-family:inherit;border:0;cursor:pointer;color:inherit}
 .chip.warn{background:#FFE1DE;color:#C0261C}
 .gamebody{flex:1;display:flex;gap:10px;min-height:0;align-items:flex-start}
 .boardwrap{flex:none;background:linear-gradient(#36363b,var(--tray));border-radius:22px;padding:8px;box-shadow:inset 0 2px 0 rgba(255,255,255,.08),0 6px 0 #0d0d0f,0 14px 24px rgba(0,0,0,.25)}
-#board{display:block;height:auto;touch-action:none}
+#board{display:block;height:auto;touch-action:none;overflow:visible}
 .traylabel{display:flex;justify-content:space-between;align-items:center;margin:16px 2px 8px;font-size:15px;color:var(--muted)}
 #tray{flex:1;align-self:stretch;display:grid;grid-template-columns:1fr;gap:8px;align-content:start;overflow-y:auto;padding:2px 2px 8px;min-width:0}
 #tray.two{grid-template-columns:1fr 1fr}
 .slot{background:var(--card);border-radius:14px;display:grid;place-items:center;min-height:72px;padding:6px;position:relative}
 .slot.sel{outline:3px solid var(--ink);outline-offset:-3px}
 .slot.empty{background:transparent;border:2px dashed #DDD5C4}
-.slot svg{max-width:100%;max-height:84px;pointer-events:none}
+.slot svg{overflow:visible;max-width:100%;max-height:88px;pointer-events:none}
 .controls{display:flex;gap:10px;margin-top:10px}
 .ctl{flex:1;height:52px;border-radius:16px;background:var(--card);font-size:16px;font-weight:600;display:flex;align-items:center;justify-content:center;gap:6px;box-shadow:0 3px 0 rgba(0,0,0,.08)}
 .ctl:disabled{opacity:.4}
 .ctl:active{transform:translateY(2px)}
 .mbtn{position:relative;width:48px;height:46px;border-radius:14px;background:var(--card);box-shadow:0 2px 0 rgba(0,0,0,.08);display:grid;place-items:center;padding:0;flex:none}
 .mbtn .cnt{position:absolute;right:-6px;top:-6px;background:#FFC61A;border-radius:10px;font-size:12px;font-weight:700;padding:1px 6px;border:2px solid var(--bg)}
-#ghost{position:absolute;left:0;top:0;pointer-events:none;z-index:20;display:none;filter:drop-shadow(0 10px 10px rgba(0,0,0,.35))}
+#ghost{overflow:visible;position:absolute;left:0;top:0;pointer-events:none;z-index:20;display:none;filter:drop-shadow(0 10px 10px rgba(0,0,0,.35))}
 .nudge{position:absolute;right:76px;top:58px;z-index:15;max-width:220px;font-size:15px;display:none;animation:pop .3s cubic-bezier(.3,1.5,.5,1)}
 .nudge.on{display:block}
 .nudge:after{content:"";position:absolute;right:-10px;top:14px;border:8px solid transparent;border-left-color:var(--card)}
@@ -431,17 +431,52 @@ function mix(a,b,t){const pa=[1,3,5].map(i=>parseInt(a.substr(i,2),16)),pb=[1,3,
 
 function lum(h){const [r,g,b]=[1,3,5].map(i=>parseInt(h.substr(i,2),16)/255);return .2126*r+.7152*g+.0722*b}
 function bridgeCol(col){return lum(col)<.3?mix(col,'#ffffff',.18):mix(col,'#000000',.12)}
+/* ---------- Фигура как надувной шарик для фигурок: сегменты, перекрутки, хвостик-завязка ---------- */
 function drawPiece(g,pi,cells,s,ox=0,oy=0,opts={}){
-  const col=PIECES[pi].color, set=new Set(cells.map(c=>c+''));let html='';
-  for(const [r,c] of cells){const cx=ox+c*s+s/2, cy=oy+r*s+s/2;
-    const bc=opts.fixed?mix(col,'#000000',.45):bridgeCol(col);
-    if(set.has([r,c+1]+''))html+=`<rect x="${cx}" y="${cy-s*.2}" width="${s}" height="${s*.4}" rx="${s*.12}" fill="${bc}"/>`;
-    if(set.has([r+1,c]+''))html+=`<rect x="${cx-s*.2}" y="${cy}" width="${s*.4}" height="${s}" rx="${s*.12}" fill="${bc}"/>`;}
-  for(const [r,c] of cells){const cx=ox+c*s+s/2, cy=oy+r*s+s/2;
-    if(opts.fixed){html+=`<circle cx="${cx}" cy="${cy}" r="${s*.42}" fill="url(#f${pi})"/><circle cx="${cx}" cy="${cy}" r="${s*.42}" fill="none" stroke="#000" stroke-opacity=".35" stroke-width="${s*.05}"/>`;continue}
-    html+=`<circle cx="${cx}" cy="${cy}" r="${s*.44}" fill="url(#g${pi})"/>`;
-    if(!opts.flat)html+=`<ellipse cx="${cx-s*.12}" cy="${cy-s*.16}" rx="${s*.13}" ry="${s*.08}" fill="#fff" opacity=".55"/>`;}
-  g.insertAdjacentHTML('beforeend',html);
+  const col=PIECES[pi].color, set=new Set(cells.map(c=>c+''));const has=(r,c)=>set.has([r,c]+'');
+  const fixed=!!opts.fixed, fill=fixed?`url(#f${pi})`:`url(#g${pi})`;
+  const dark=mix(col,'#000000',fixed?.55:.38), lite=mix(col,'#ffffff',fixed?.05:.3);
+  let sh='',seg='',kn='',tl='';
+  const nbs=(r,c)=>[[0,1],[1,0],[0,-1],[-1,0]].filter(([a,b])=>has(r+a,c+b));
+  // хвостик — на конце «колбаски» (клетка с одним соседом), первой по порядку
+  const ends=cells.filter(([r,c])=>nbs(r,c).length===1).sort((a,b)=>a[0]-b[0]||a[1]-b[1]);
+  const tail=ends[0]||cells[0];
+  for(const [r,c] of cells){
+    const L=has(r,c-1),R=has(r,c+1),U=has(r-1,c),D=has(r+1,c);
+    const hx=(L||R)&&!(U||D), vy=(U||D)&&!(L||R);
+    const rx=s*(hx?.5:.44), ry=s*(vy?.5:.44);
+    const cx=ox+c*s+s/2+(R&&!L?s*.03:L&&!R?-s*.03:0), cy=oy+r*s+s/2+(D&&!U?s*.03:U&&!D?-s*.03:0);
+    if(!opts.flat)sh+=`<ellipse cx="${cx+s*.03}" cy="${cy+s*.06}" rx="${rx*.97}" ry="${ry*.95}" fill="#000" opacity=".32"/>`;
+    seg+=`<ellipse cx="${cx}" cy="${cy}" rx="${rx}" ry="${ry}" fill="${fill}"/>`;
+    if(!fixed&&!opts.flat){ // блик-полоска латекса
+      seg+=`<path d="M${cx-rx*.58} ${cy-ry*.12} Q ${cx-rx*.48} ${cy-ry*.64} ${cx+rx*.06} ${cy-ry*.7}" stroke="#fff" stroke-width="${s*.075}" stroke-linecap="round" fill="none" opacity=".75"/><circle cx="${cx+rx*.3}" cy="${cy-ry*.56}" r="${s*.032}" fill="#fff" opacity=".7"/>`}
+    else if(fixed) seg+=`<ellipse cx="${cx}" cy="${cy}" rx="${rx}" ry="${ry}" fill="none" stroke="#000" stroke-opacity=".3" stroke-width="${s*.04}"/>`;
+  }
+  // перекрутки между сегментами
+  for(const [r,c] of cells)for(const [a,b] of [[0,1],[1,0]]){if(!has(r+a,c+b))continue;
+    const x=ox+c*s+s/2+b*s/2, y=oy+r*s+s/2+a*s/2;
+    if(b){kn+=`<ellipse cx="${x}" cy="${y}" rx="${s*.075}" ry="${s*.16}" fill="${dark}"/><ellipse cx="${x-s*.012}" cy="${y-s*.05}" rx="${s*.03}" ry="${s*.06}" fill="${lite}" opacity=".75"/>`+
+      `<path d="M${x-s*.14} ${y-s*.18} Q ${x-s*.06} ${y} ${x-s*.14} ${y+s*.18} M${x+s*.14} ${y-s*.18} Q ${x+s*.06} ${y} ${x+s*.14} ${y+s*.18}" stroke="${dark}" stroke-width="${s*.03}" fill="none" opacity=".55"/>`}
+    else{kn+=`<ellipse cx="${x}" cy="${y}" rx="${s*.16}" ry="${s*.075}" fill="${dark}"/><ellipse cx="${x-s*.05}" cy="${y-s*.012}" rx="${s*.06}" ry="${s*.03}" fill="${lite}" opacity=".75"/>`+
+      `<path d="M${x-s*.18} ${y-s*.14} Q ${x} ${y-s*.06} ${x+s*.18} ${y-s*.14} M${x-s*.18} ${y+s*.14} Q ${x} ${y+s*.06} ${x+s*.18} ${y+s*.14}" stroke="${dark}" stroke-width="${s*.03}" fill="none" opacity=".55"/>`}}
+  // хвостик: заметный узел-завязка + закрученный кончик, торчит наружу
+  if(!opts.noTail){const [r,c]=tail;const nb=nbs(r,c)[0]||[0,1];
+    const ux=-nb[1], uy=-nb[0]; // наружу от соседа
+    const px=-uy, py=ux;        // перпендикуляр
+    const bx=ox+c*s+s/2+ux*s*.44, by=oy+r*s+s/2+uy*s*.44; // основание на краю сегмента
+    const kx=bx+ux*s*.13, ky=by+uy*s*.13;                  // узел
+    const mx=kx+ux*s*.26-px*s*.1, my=ky+uy*s*.26-py*s*.1;  // изгиб
+    const tx=kx+ux*s*.3+px*s*.2, ty=ky+uy*s*.3+py*s*.2;    // кончик загнут вбок
+    const tcol=fixed?mix(col,'#000000',.3):col;
+    // «горлышко» к узлу
+    tl+=`<path d="M${bx+px*s*.13} ${by+py*s*.13} Q ${bx+ux*s*.06} ${by+uy*s*.06} ${kx} ${ky} Q ${bx+ux*s*.06} ${by+uy*s*.06} ${bx-px*s*.13} ${by-py*s*.13} Z" fill="${tcol}"/>`;
+    // закрученный кончик: тёмный контур + цвет фигуры
+    tl+=`<path d="M${kx} ${ky} Q ${mx} ${my} ${tx} ${ty}" stroke="${dark}" stroke-width="${s*.13}" stroke-linecap="round" fill="none"/>`;
+    tl+=`<path d="M${kx} ${ky} Q ${mx} ${my} ${tx} ${ty}" stroke="${tcol}" stroke-width="${s*.075}" stroke-linecap="round" fill="none"/>`;
+    // узел-завязка
+    tl+=`<circle cx="${kx}" cy="${ky}" r="${s*.13}" fill="${dark}"/><circle cx="${kx}" cy="${ky}" r="${s*.095}" fill="${tcol}"/><circle cx="${kx-s*.035}" cy="${ky-s*.035}" r="${s*.04}" fill="#fff" opacity="${fixed?.25:.75}"/>`;
+  }
+  g.insertAdjacentHTML('beforeend',sh+seg+kn+tl);
 }
 function boardSvg(svg,s){svg.setAttribute('viewBox',`0 0 ${W*s} ${H*s}`);let h='';
   for(let r=0;r<H;r++)for(let c=0;c<W;c++)h+=`<circle cx="${c*s+s/2}" cy="${r*s+s/2}" r="${s*.36}" fill="url(#hole)"/>`;svg.innerHTML=h}
@@ -544,13 +579,15 @@ function heroAssemble(){
     if(nxt==null){for(const [p] of order.slice().reverse()){nxt=[...adj[p]].find(x=>!done.has(x));if(nxt!=null){par=p;break}}}
     order.push([nxt,par]);done.add(nxt);last=nxt;
   }
-  const bridgesL=document.createElementNS(NS,'g'),ballsL=document.createElementNS(NS,'g');hs.append(bridgesL,ballsL);
+  const bridgesL=document.createElementNS(NS,'g'),ballsL=document.createElementNS(NS,'g');hs.append(ballsL,bridgesL);hs.style.overflow='visible';
   function bridgesOf(pi){const cells=cellsP[pi],col=PIECES[pi].color,set=new Set(cells.map(c=>c+''));let h='';
     for(const [r,c] of cells){const [x,y]=ctr([r,c]);
-      if(set.has([r,c+1]+''))h+=`<rect x="${x}" y="${y-s*.2}" width="${s}" height="${s*.4}" rx="${s*.12}" fill="${bridgeCol(col)}"/>`;
-      if(set.has([r+1,c]+''))h+=`<rect x="${x-s*.2}" y="${y}" width="${s*.4}" height="${s}" rx="${s*.12}" fill="${bridgeCol(col)}"/>`;}
+      const dk=mix(col,'#000000',.38);
+      if(set.has([r,c+1]+''))h+=`<ellipse cx="${x+s/2}" cy="${y}" rx="${s*.075}" ry="${s*.16}" fill="${dk}"/>`;
+      if(set.has([r+1,c]+''))h+=`<ellipse cx="${x}" cy="${y+s/2}" rx="${s*.16}" ry="${s*.075}" fill="${dk}"/>`;}
     const g=document.createElementNS(NS,'g');g.innerHTML=h;return g}
-  const ball=(x,y,pi)=>`<circle cx="${x}" cy="${y}" r="${s*.44}" fill="url(#g${pi})"/><ellipse cx="${x-s*.12}" cy="${y-s*.16}" rx="${s*.13}" ry="${s*.08}" fill="#fff" opacity=".55"/>`;
+  const ball=(x,y,pi)=>`<ellipse cx="${x}" cy="${y}" rx="${s*.46}" ry="${s*.46}" fill="url(#g${pi})"/><path d="M${x-s*.27} ${y-s*.05} Q ${x-s*.22} ${y-s*.3} ${x+s*.03} ${y-s*.32}" stroke="#fff" stroke-width="${s*.075}" stroke-linecap="round" fill="none" opacity=".75"/>`;
+  const finalDraw=()=>{hs.innerHTML='';const fg=document.createElementNS(NS,'g');hs.appendChild(fg);present.forEach(pi=>drawPiece(fg,pi,cellsP[pi],s))};
   const MORPH=reduce?0:330, TINT=reduce?0:220, STEP=reduce?0:430;
   order.forEach(([pi,par],i)=>{
     const t0=250+i*STEP;
@@ -573,8 +610,9 @@ function heroAssemble(){
       if(!reduce)br.animate([{opacity:0},{opacity:1}],{duration:180,delay:src?MORPH-40:250,fill:'forwards'}).onfinish=()=>br.setAttribute('opacity',1);
     },reduce?0:t0);
   });
+  if(reduce)setTimeout(finalDraw,0);
   if(!reduce){const end=250+(present.length-1)*STEP+MORPH+TINT;
-    setTimeout(()=>{if(run!==heroRun)return;hs.animate([{transform:'scale(1)'},{transform:'scale(1.04)'},{transform:'scale(1)'}],{duration:420,easing:'ease-out'})},end)}
+    setTimeout(()=>{if(run!==heroRun)return;finalDraw();hs.animate([{transform:'scale(1)'},{transform:'scale(1.04)'},{transform:'scale(1)'}],{duration:420,easing:'ease-out'})},end)}
   hs.onclick=()=>heroAssemble();
 }
 /* ---------- MAP ---------- */
@@ -655,7 +693,7 @@ function render(){
   G.free.forEach(pi=>{const d=document.createElement('div');const on=G.onBoard[pi];
     d.className='slot'+(on?' empty':'')+(G.sel===pi&&!on&&!G.hintPick?' sel':'')+(G.hintPick&&!on?' pick':'');d.dataset.pi=pi;
     if(!on){const cells=G.shape[pi];const h=Math.max(...cells.map(c=>c[0]))+1,w=Math.max(...cells.map(c=>c[1]))+1;
-      const s=document.createElementNS(NS,'svg');s.setAttribute('viewBox',`-2 -2 ${w*20+4} ${h*20+4}`);s.style.width=Math.min(w*22,100)+'px';
+      const s=document.createElementNS(NS,'svg');s.setAttribute('viewBox',`-8 -8 ${w*20+16} ${h*20+16}`);s.style.width=Math.min(w*22+10,104)+'px';
       drawPiece(s,pi,cells,20);d.appendChild(s)}
     tray.appendChild(d)});
   $('#gLeft').textContent=G.free.filter(pi=>!G.onBoard[pi]).length;$('#gMoves').textContent=G.moves;
@@ -892,8 +930,8 @@ function popAnim(done){
     const d=Math.hypot(r-cr,(c-cc)*1.2);maxD=Math.max(maxD,d);
     const g=document.createElementNS(NS,'g');g.style.transformBox='fill-box';g.style.transformOrigin='center';
     const fixed=G.fixed.has(pi);
-    g.innerHTML=fixed?`<circle cx="${cx}" cy="${cy}" r="${S*.42}" fill="url(#f${pi})"/>`
-      :`<circle cx="${cx}" cy="${cy}" r="${S*.44}" fill="url(#g${pi})"/><ellipse cx="${cx-S*.12}" cy="${cy-S*.16}" rx="${S*.13}" ry="${S*.08}" fill="#fff" opacity=".55"/>`;
+    g.innerHTML=fixed?`<ellipse cx="${cx}" cy="${cy}" rx="${S*.45}" ry="${S*.45}" fill="url(#f${pi})"/>`
+      :`<ellipse cx="${cx}" cy="${cy}" rx="${S*.46}" ry="${S*.46}" fill="url(#g${pi})"/><path d="M${cx-S*.27} ${cy-S*.05} Q ${cx-S*.22} ${cy-S*.3} ${cx+S*.03} ${cy-S*.32}" stroke="#fff" stroke-width="${S*.075}" stroke-linecap="round" fill="none" opacity=".75"/>`;
     lay.appendChild(g);balls.push({g,d,cx,cy,col:PIECES[pi].color})});
   setTimeout(()=>groups.forEach(g=>g.style.opacity=0),240);
   const WAVE=900, base=280;
@@ -905,11 +943,17 @@ function popAnim(done){
     // брызги
     setTimeout(()=>{
       if(navigator.vibrate&&Date.now()-lastBuzz>70){try{navigator.vibrate(8)}catch(e){}lastBuzz=Date.now()}
-      const sp=document.createElementNS(NS,'g');lay.appendChild(sp);const n=7;
-      for(let k=0;k<n;k++){const a=k/n*Math.PI*2+Math.random()*.5,dist=S*(.5+Math.random()*.35),rr=S*(.06+Math.random()*.05);
-        const dot=document.createElementNS(NS,'circle');dot.setAttribute('cx',cx);dot.setAttribute('cy',cy);dot.setAttribute('r',rr);dot.setAttribute('fill',mix(col,'#ffffff',.25));sp.appendChild(dot);
-        dot.animate([{transform:'translate(0,0)',opacity:1},{transform:`translate(${Math.cos(a)*dist}px,${Math.sin(a)*dist}px)`,opacity:0}],{duration:420,easing:'cubic-bezier(.2,.7,.3,1)',fill:'forwards'})}
-      setTimeout(()=>sp.remove(),450);
+      const sp=document.createElementNS(NS,'g');lay.appendChild(sp);
+      // вспышка «хлоп»
+      const star=document.createElementNS(NS,'path');star.setAttribute('d',[...Array(10)].map((_,i)=>{const a=i/10*Math.PI*2,R=i%2?S*.16:S*.42;return (i?'L':'M')+(cx+Math.cos(a)*R)+' '+(cy+Math.sin(a)*R)}).join(' ')+'Z');
+      star.setAttribute('fill','#fff');sp.appendChild(star);star.animate([{opacity:.95,transform:'scale(.6)'},{opacity:0,transform:'scale(1.15)'}],{duration:220,fill:'forwards'});star.style.transformBox='fill-box';star.style.transformOrigin='center';
+      // клочки латекса
+      const n=6;for(let k=0;k<n;k++){const a=k/n*Math.PI*2+Math.random()*.6,dist=S*(.55+Math.random()*.35);
+        const sx=cx+Math.cos(a)*S*.2,sy=cy+Math.sin(a)*S*.2;
+        const shred=document.createElementNS(NS,'path');shred.setAttribute('d',`M${sx} ${sy} q ${S*.12} ${-S*.05} ${S*.17} ${S*.08} q ${-S*.06} ${S*.1} ${-S*.17} ${-S*.02}z`);
+        shred.setAttribute('fill',col);sp.appendChild(shred);
+        shred.animate([{transform:'translate(0,0) rotate(0deg)',opacity:1},{transform:`translate(${Math.cos(a)*dist}px,${Math.sin(a)*dist+S*.15}px) rotate(${(Math.random()*2-1)*160}deg)`,opacity:0}],{duration:520,easing:'cubic-bezier(.2,.7,.3,1)',fill:'forwards'})}
+      setTimeout(()=>sp.remove(),560);
     },t+200);
   });
   setTimeout(done,base+WAVE+60+300+250);
