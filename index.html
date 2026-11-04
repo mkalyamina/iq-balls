@@ -636,7 +636,10 @@ function startLevel(n){
   const grid=new Array(W*H).fill(-1);L.placed.forEach(pi=>cellsOf(sol,pi).forEach(([r,c])=>grid[r*W+c]=pi));
   const free=PIECES.map((_,i)=>i).filter(i=>!L.placed.includes(i));
   G={L,sol,grid,fixed:new Set(L.placed),free,
-     shape:Object.fromEntries(free.map(pi=>{let c=norm(PIECES[pi].cells);const k=(pi*7+n)%4;for(let i=0;i<k;i++)c=rot(c);if((pi+n)%3===0)c=flip(c);return[pi,c]})),
+     shape:Object.fromEntries(free.map((pi,fi)=>{
+       // уровни 1–4: почти все фигуры уже развёрнуты как в решении, повернуть нужно только одну
+       if(n<=4){let c=norm(cellsOf(sol,pi));if(fi===free.length-1){c=rot(c);if(cellsOf(sol,pi).length&&JSON.stringify(c)===JSON.stringify(norm(cellsOf(sol,pi))))c=rot(c)}return[pi,c]}
+       let c=norm(PIECES[pi].cells);const k=(pi*7+n)%4;for(let i=0;i<k;i++)c=rot(c);if((pi+n)%3===0)c=flip(c);return[pi,c]})),
      onBoard:{},sel:free[0],hints:0,moves:0,used:0,done:false,paused:false,lastMove:Date.now()};
   $('#hintBar').classList.remove('on');$('#game').classList.remove('picking');
   $('#gTitle').textContent='Уровень '+n;
