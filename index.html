@@ -556,62 +556,15 @@ let heroRun=0;
 const SQ=[11, 4, 4, 4, 9, 9, 11, 11, 0, 4, 0, 9, 6, 6, 0, 0, 0, 9, 10, 6, 6, 6, 1, 9, 10, 10, 3, 1, 1, 1, 10, 3, 3, 3, 3, 1], SN=6;
 function heroAssemble(){
   const hs=$('#heroSvg'),s=30,run=++heroRun;
-  hs.setAttribute('viewBox',`0 0 ${SN*s} ${SN*s}`);hs.innerHTML='';
+  hs.setAttribute('viewBox',`0 0 ${SN*s} ${SN*s}`);hs.innerHTML='';hs.style.overflow='visible';
   const midH=document.querySelector('#home .homemid').clientHeight;const side=Math.max(160,Math.min(330,midH*0.8,document.querySelector('#home').clientWidth-60));hs.style.height=side+'px';hs.style.width=side+'px';
-  const sol=SQ, PW=SN, PH=SN;
-  const present=[...new Set(sol)];
-  const reduce=window.matchMedia&&matchMedia('(prefers-reduced-motion: reduce)').matches;
+  const sol=SQ, PW=SN;const present=[...new Set(sol)];
   const cellsP=PIECES.map((_,pi)=>{const o=[];sol.forEach((v,i)=>{if(v===pi)o.push([Math.floor(i/PW),i%PW])});return o});
-  const ctr=c=>[c[1]*s+s/2,c[0]*s+s/2];
-  // соседство фигур
-  const adj=PIECES.map(()=>new Set());
-  for(let r=0;r<PH;r++)for(let c=0;c<PW;c++){const v=sol[r*PW+c];
-    if(c+1<PW&&sol[r*PW+c+1]!==v){adj[v].add(sol[r*PW+c+1]);adj[sol[r*PW+c+1]].add(v)}
-    if(r+1<PH&&sol[(r+1)*PW+c]!==v){adj[v].add(sol[(r+1)*PW+c]);adj[sol[(r+1)*PW+c]].add(v)}}
-  // порядок: начинаем с фигуры в центре поля, дальше каждая новая — сосед предыдущей (или ближайшей уже стоящей)
-  const cy0=(PH-1)/2,cx0=(PW-1)/2;
-  const dist=pi=>{const c=cellsP[pi];return Math.hypot(c.reduce((a,x)=>a+x[0],0)/c.length-cy0,c.reduce((a,x)=>a+x[1],0)/c.length-cx0)};
-  const start=present.slice().sort((a,b)=>dist(a)-dist(b))[0];
-  const order=[[start,null]],done=new Set([start]);let last=start;
-  while(order.length<present.length){
-    let nxt=[...adj[last]].find(x=>!done.has(x)),par=last;
-    if(nxt==null){for(const [p] of order.slice().reverse()){nxt=[...adj[p]].find(x=>!done.has(x));if(nxt!=null){par=p;break}}}
-    order.push([nxt,par]);done.add(nxt);last=nxt;
-  }
-  const bridgesL=document.createElementNS(NS,'g'),ballsL=document.createElementNS(NS,'g');hs.append(ballsL,bridgesL);hs.style.overflow='visible';
-  function bridgesOf(pi){const cells=cellsP[pi],col=PIECES[pi].color,set=new Set(cells.map(c=>c+''));let h='';
-    for(const [r,c] of cells){const [x,y]=ctr([r,c]);
-      const dk=mix(col,'#000000',.38);
-      if(set.has([r,c+1]+''))h+=`<ellipse cx="${x+s/2}" cy="${y}" rx="${s*.075}" ry="${s*.16}" fill="${dk}"/>`;
-      if(set.has([r+1,c]+''))h+=`<ellipse cx="${x}" cy="${y+s/2}" rx="${s*.16}" ry="${s*.075}" fill="${dk}"/>`;}
-    const g=document.createElementNS(NS,'g');g.innerHTML=h;return g}
-  const ball=(x,y,pi)=>`<ellipse cx="${x}" cy="${y}" rx="${s*.46}" ry="${s*.46}" fill="url(#g${pi})"/><path d="M${x-s*.27} ${y-s*.05} Q ${x-s*.22} ${y-s*.3} ${x+s*.03} ${y-s*.32}" stroke="#fff" stroke-width="${s*.075}" stroke-linecap="round" fill="none" opacity=".75"/>`;
-  const finalDraw=(anim)=>{hs.innerHTML='';present.forEach((pi,i)=>{const fg=document.createElementNS(NS,'g');fg.style.transformBox='fill-box';fg.style.transformOrigin='center';hs.appendChild(fg);drawPiece(fg,pi,cellsP[pi],s);if(anim)inflate(fg,i*45)})};
-  const MORPH=reduce?0:330, TINT=reduce?0:220, STEP=reduce?0:430;
-  order.forEach(([pi,par],i)=>{
-    const t0=250+i*STEP;
-    setTimeout(()=>{if(run!==heroRun)return;
-      const br=bridgesOf(pi);br.setAttribute('opacity',reduce?1:0);bridgesL.appendChild(br);
-      const pg=document.createElementNS(NS,'g');ballsL.appendChild(pg);
-      const src=par==null?null:cellsP[par];
-      cellsP[pi].forEach(cell=>{
-        const [x,y]=ctr(cell);const g=document.createElementNS(NS,'g');
-        // снизу — цвет «родителя», сверху — свой цвет (проявляется)
-        g.innerHTML=(src?`<g class="old">${ball(x,y,par)}</g>`:'')+`<g class="new" opacity="${src&&!reduce?0:1}">${ball(x,y,pi)}</g>`;
-        pg.appendChild(g);if(reduce)return;
-        if(!src){g.animate([{transform:'scale(0)',transformOrigin:`${x}px ${y}px`},{transform:'scale(1.1)',transformOrigin:`${x}px ${y}px`,offset:.7},{transform:'scale(1)',transformOrigin:`${x}px ${y}px`}],{duration:420,easing:'ease-out'});return}
-        // шарик вырастает из ближайшего шарика родителя
-        const near=src.reduce((b,c)=>Math.hypot(c[0]-cell[0],c[1]-cell[1])<Math.hypot(b[0]-cell[0],b[1]-cell[1])?c:b);
-        const [sx,sy]=ctr(near);
-        g.animate([{transform:`translate(${sx-x}px,${sy-y}px)`},{transform:'none'}],{duration:MORPH,easing:'cubic-bezier(.3,.9,.4,1.15)',fill:'backwards'});
-        g.querySelector('.new').animate([{opacity:0},{opacity:1}],{duration:TINT,delay:MORPH-60,fill:'forwards'}).onfinish=function(){g.querySelector('.new').setAttribute('opacity',1);g.querySelector('.old')?.remove()};
-      });
-      if(!reduce)br.animate([{opacity:0},{opacity:1}],{duration:180,delay:src?MORPH-40:250,fill:'forwards'}).onfinish=()=>br.setAttribute('opacity',1);
-    },reduce?0:t0);
-  });
-  if(reduce)setTimeout(finalDraw,0);
-  if(!reduce){const end=250+(present.length-1)*STEP+MORPH+TINT;
-    setTimeout(()=>{if(run!==heroRun)return;finalDraw(true);hs.animate([{transform:'scale(1)'},{transform:'scale(1.04)'},{transform:'scale(1)'}],{duration:420,easing:'ease-out'})},end)}
+  // сразу квадрат: все фигуры целиком, с хвостиками; надуваются по очереди от центра
+  const c0=(SN-1)/2;const dist=pi=>{const c=cellsP[pi];return Math.hypot(c.reduce((a,x)=>a+x[0],0)/c.length-c0,c.reduce((a,x)=>a+x[1],0)/c.length-c0)};
+  present.slice().sort((a,b)=>dist(a)-dist(b)).forEach((pi,i)=>{
+    const g=document.createElementNS(NS,'g');g.style.transformBox='fill-box';g.style.transformOrigin='center';hs.appendChild(g);
+    drawPiece(g,pi,cellsP[pi],s);inflate(g,200+i*130)});
   hs.onclick=()=>heroAssemble();
 }
 /* ---------- MAP ---------- */
