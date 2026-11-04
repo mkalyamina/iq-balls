@@ -574,12 +574,12 @@ function heroAssemble(){
 }
 
 // «хлоп»: короткие белые лучики разлетаются в стороны, как солнышко
-function popRays(layer,cx,cy,S){
+function popRays(layer,cx,cy,S,col='#ffffff'){
   const n=8,rot=Math.random()*Math.PI/n;
   for(let k=0;k<n;k++){const a=rot+k/n*Math.PI*2,dx=Math.cos(a),dy=Math.sin(a);
     const ln=document.createElementNS(NS,'line');
     ln.setAttribute('x1',cx+dx*S*.3);ln.setAttribute('y1',cy+dy*S*.3);ln.setAttribute('x2',cx+dx*S*.5);ln.setAttribute('y2',cy+dy*S*.5);
-    ln.setAttribute('stroke','#fff');ln.setAttribute('stroke-width',S*.07);ln.setAttribute('stroke-linecap','round');layer.appendChild(ln);
+    ln.setAttribute('stroke',mix(col,'#ffffff',.15));ln.setAttribute('stroke-width',S*.07);ln.setAttribute('stroke-linecap','round');layer.appendChild(ln);
     ln.animate([{transform:'translate(0,0)',opacity:1},{transform:`translate(${dx*S*.28}px,${dy*S*.28}px)`,opacity:0}],{duration:260,easing:'cubic-bezier(.2,.7,.3,1)',fill:'forwards'})}
 }
 // лопание шариков: лучики и клочки латекса (для главной)
@@ -587,7 +587,7 @@ function popBalloons(svg,pts,col,S){
   if(navigator.vibrate){try{navigator.vibrate(12)}catch(e){}}
   const lay=document.createElementNS(NS,'g');svg.appendChild(lay);
   pts.forEach(([cx,cy],i)=>setTimeout(()=>{
-    popRays(lay,cx,cy,S);
+    popRays(lay,cx,cy,S,col);
     for(let k=0;k<6;k++){const a=k/6*Math.PI*2+Math.random()*.6,dist=S*(.55+Math.random()*.35);
       const sx=cx+Math.cos(a)*S*.2,sy=cy+Math.sin(a)*S*.2;const sh=document.createElementNS(NS,'path');
       sh.setAttribute('d',`M${sx} ${sy} q ${S*.12} ${-S*.05} ${S*.17} ${S*.08} q ${-S*.06} ${S*.1} ${-S*.17} ${-S*.02}z`);sh.setAttribute('fill',col);lay.appendChild(sh);
@@ -930,7 +930,7 @@ function popAnim(done){
       if(navigator.vibrate&&Date.now()-lastBuzz>70){try{navigator.vibrate(8)}catch(e){}lastBuzz=Date.now()}
       const sp=document.createElementNS(NS,'g');lay.appendChild(sp);
       // «хлоп» — лучики
-      popRays(sp,cx,cy,S);
+      popRays(sp,cx,cy,S,col);
       // клочки латекса
       const n=6;for(let k=0;k<n;k++){const a=k/n*Math.PI*2+Math.random()*.6,dist=S*(.55+Math.random()*.35);
         const sx=cx+Math.cos(a)*S*.2,sy=cy+Math.sin(a)*S*.2;
