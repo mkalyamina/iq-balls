@@ -876,7 +876,44 @@ function checkWin(){if(G.grid.includes(-1))return;G.done=true;stopTimer();
   $('#winCat').textContent=CATS.find(c=>c.id===G.L.cat).name+' · Уровень '+n;
   $('#winStars').innerHTML=[1,2,3].map(i=>`<span class="${i<=stars?'':'off'}">★</span>`).join('');
   $('#winTime').textContent=fmt(G.used);$('#winMoves').textContent=G.moves;$('#winStreak').textContent=S0.streak;
-  $('#winNext').style.display=n<LEVELS.length?'':'none';setTimeout(()=>openM('#mWin'),350)}
+  $('#winNext').style.display=n<LEVELS.length?'':'none';popAnim(()=>openM('#mWin'))}
+
+/* ---------- Победа: перемычки исчезают, шарики волной от центра сжимаются и лопаются брызгами ---------- */
+function popAnim(done){
+  const reduce=window.matchMedia&&matchMedia('(prefers-reduced-motion: reduce)').matches;
+  const b=$('#board');if(reduce||!b){setTimeout(done,350);return}
+  const groups=[...b.querySelectorAll('.bp')];
+  // 1) перемычки тают
+  groups.forEach(g=>g.querySelectorAll('rect').forEach(r=>r.animate([{opacity:1},{opacity:0}],{duration:250,fill:'forwards'})));
+  // 2) шарики заменяем отдельными, чтобы анимировать каждый
+  const lay=document.createElementNS(NS,'g');b.appendChild(lay);
+  const cr=(H-1)/2,cc=(W-1)/2;let maxD=0;const balls=[];
+  G.grid.forEach((pi,i)=>{const r=Math.floor(i/W),c=i%W,cx=c*S+S/2,cy=r*S+S/2;
+    const d=Math.hypot(r-cr,(c-cc)*1.2);maxD=Math.max(maxD,d);
+    const g=document.createElementNS(NS,'g');g.style.transformBox='fill-box';g.style.transformOrigin='center';
+    const fixed=G.fixed.has(pi);
+    g.innerHTML=fixed?`<circle cx="${cx}" cy="${cy}" r="${S*.42}" fill="url(#f${pi})"/>`
+      :`<circle cx="${cx}" cy="${cy}" r="${S*.44}" fill="url(#g${pi})"/><ellipse cx="${cx-S*.12}" cy="${cy-S*.16}" rx="${S*.13}" ry="${S*.08}" fill="#fff" opacity=".55"/>`;
+    lay.appendChild(g);balls.push({g,d,cx,cy,col:PIECES[pi].color})});
+  setTimeout(()=>groups.forEach(g=>g.style.opacity=0),240);
+  const WAVE=900, base=280;
+  let lastBuzz=0;
+  balls.forEach(({g,d,cx,cy,col})=>{
+    const t=base+(d/maxD)*WAVE+Math.random()*60;
+    g.animate([{transform:'scale(1)'},{transform:'scale(.72)',offset:.55},{transform:'scale(1.3)',opacity:.9,offset:.8},{transform:'scale(1.5)',opacity:0}],
+      {duration:300,delay:t,easing:'ease-in',fill:'forwards'});
+    // брызги
+    setTimeout(()=>{
+      if(navigator.vibrate&&Date.now()-lastBuzz>70){try{navigator.vibrate(8)}catch(e){}lastBuzz=Date.now()}
+      const sp=document.createElementNS(NS,'g');lay.appendChild(sp);const n=7;
+      for(let k=0;k<n;k++){const a=k/n*Math.PI*2+Math.random()*.5,dist=S*(.5+Math.random()*.35),rr=S*(.06+Math.random()*.05);
+        const dot=document.createElementNS(NS,'circle');dot.setAttribute('cx',cx);dot.setAttribute('cy',cy);dot.setAttribute('r',rr);dot.setAttribute('fill',mix(col,'#ffffff',.25));sp.appendChild(dot);
+        dot.animate([{transform:'translate(0,0)',opacity:1},{transform:`translate(${Math.cos(a)*dist}px,${Math.sin(a)*dist}px)`,opacity:0}],{duration:420,easing:'cubic-bezier(.2,.7,.3,1)',fill:'forwards'})}
+      setTimeout(()=>sp.remove(),450);
+    },t+200);
+  });
+  setTimeout(done,base+WAVE+60+300+250);
+}
 $('#winNext').onclick=()=>startLevel(G.L.n+1);
 $('#winMap').onclick=()=>go('map');
 function lose(){G.paused=true;S0.streak=0;save();
