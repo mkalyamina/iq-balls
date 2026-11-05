@@ -428,8 +428,23 @@ const FRUITS=[
  {k:'apple',c:'#7CC242'},{k:'orange',c:'#FF8C1A'},{k:'melon',c:'#F2385A'},{k:'lemon',c:'#FFD43B'},
  {k:'blueberry',c:'#3F4FC4'},{k:'plum',c:'#7B2C9F'},{k:'peach',c:'#FFA36B'},{k:'cherry',c:'#C2185B'},
  {k:'kiwi',c:'#8BC34A'},{k:'strawberry',c:'#E8322E'},{k:'lime',c:'#2E9E44'},{k:'coconut',c:'#8D5B3C'}];
+const FIMG={apple:'green_apple',orange:'orange',melon:'watermelon_slice',lemon:'lemon',blueberry:'blueberry',plum:'plum',peach:'peach',cherry:'cherry',kiwi:'kiwi',strawberry:'strawberry',lime:'lime',coconut:'coconut'};
+const FJUICE={apple:'green',orange:'orange',melon:'red',lemon:'orange',blueberry:'red',plum:'red',peach:'orange',cherry:'red',kiwi:'green',strawberry:'red',lime:'green',coconut:'orange'};
+const FA='assets/fruits/';
+// «нажатое» состояние фрукта: лопнувшая картинка + брызги сока
+function fruitBurst(layer,pi,cx,cy,S){
+  const k=FRUITS[pi].k,sz=S*1.05;
+  const sp=document.createElementNS(NS,'image');sp.setAttribute('href',FA+'juice_splash_'+FJUICE[k]+'.png');
+  sp.setAttribute('x',cx-sz/2);sp.setAttribute('y',cy-sz/2);sp.setAttribute('width',sz);sp.setAttribute('height',sz);
+  sp.style.transformBox='fill-box';sp.style.transformOrigin='center';layer.appendChild(sp);
+  sp.animate([{transform:'scale(.4)',opacity:.95},{transform:'scale(1.5)',opacity:0}],{duration:520,easing:'cubic-bezier(.2,.7,.3,1)',fill:'forwards'});
+  const x=document.createElementNS(NS,'image');x.setAttribute('href',FA+'x_'+FIMG[k]+'.png');
+  x.setAttribute('x',cx-sz/2);x.setAttribute('y',cy-sz/2);x.setAttribute('width',sz);x.setAttribute('height',sz);
+  x.style.transformBox='fill-box';x.style.transformOrigin='center';layer.appendChild(x);
+  x.animate([{transform:'scale(.9)',opacity:1},{transform:'scale(1.12)',opacity:1,offset:.45},{transform:'scale(1.25)',opacity:0}],{duration:560,easing:'ease-out',fill:'forwards'});
+}
 let VIEW=(()=>{try{return JSON.parse(localStorage.getItem('balls.v2')||'{}').view||'balloons'}catch(e){return 'balloons'}})();
-if(VIEW==='fruits')PIECES.forEach((p,i)=>p.color=FRUITS[i].c);
+if(VIEW==='fruits'){PIECES.forEach((p,i)=>p.color=FRUITS[i].c);Object.values(FIMG).forEach(n=>{new Image().src=FA+n+'.png';new Image().src=FA+'x_'+n+'.png'});['red','orange','green'].forEach(c=>new Image().src=FA+'juice_splash_'+c+'.png')}
 (function(){const defs=$('#defs');
   const add=(id,col)=>{const g=document.createElementNS(NS,'radialGradient');g.id=id;g.setAttribute('cx','35%');g.setAttribute('cy','30%');g.setAttribute('r','75%');
     g.innerHTML=`<stop offset="0" stop-color="${mix(col,'#ffffff',.55)}"/><stop offset=".45" stop-color="${col}"/><stop offset="1" stop-color="${mix(col,'#000000',.35)}"/>`;defs.appendChild(g)};
@@ -477,16 +492,15 @@ function fruitSVG(k,x,y,s,col){
      [[-.55,-.6],[-.2,-.8],[.3,-.75],[.65,-.45]].map(([a,b])=>`<path d="M${x+a*r} ${y+b*r} l ${s*.03} ${s*.015}" stroke="#5D3A23" stroke-width="${s*.02}" stroke-linecap="round"/>`).join('');
   }return body()}
 function drawFruitPiece(g,pi,cells,s,ox=0,oy=0,opts={}){
-  const f=FRUITS[pi],col=f.c,set=new Set(cells.map(c=>c+''));const has=(r,c)=>set.has([r,c]+'');const ghost=!!opts.fixed;
+  const f=FRUITS[pi],set=new Set(cells.map(c=>c+''));const has=(r,c)=>set.has([r,c]+'');const ghost=!!opts.fixed;
   let vine='',sh='',fr='';
-  // веточка, соединяющая фрукты одной фигуры
+  // веточка с листиком между соседними фруктами одной фигуры
   for(const [r,c] of cells)for(const [a,b] of [[0,1],[1,0]])if(has(r+a,c+b)){
-    const x1=ox+c*s+s/2,y1=oy+r*s+s/2,x2=x1+b*s,y2=y1+a*s,mx=(x1+x2)/2+a*s*.08,my=(y1+y2)/2-b*s*.08;
-    vine+=`<path d="M${x1} ${y1} Q ${mx} ${my} ${x2} ${y2}" stroke="#558B2F" stroke-width="${s*.09}" stroke-linecap="round" fill="none"/><path d="M${x1} ${y1} Q ${mx} ${my} ${x2} ${y2}" stroke="#8BC34A" stroke-width="${s*.035}" stroke-linecap="round" fill="none"/>`+
-      `<path d="M${(x1+x2)/2} ${(y1+y2)/2} q ${s*.1} ${-s*.1} ${s*.2} ${-s*.02} q ${-s*.08} ${s*.1} ${-s*.2} ${s*.02}z" fill="#66BB6A" stroke="#2E7D32" stroke-width="${s*.012}" transform="rotate(${b?-60:30} ${(x1+x2)/2} ${(y1+y2)/2})"/>`}
-  for(const [r,c] of cells){const x=ox+c*s+s/2,y=oy+r*s+s/2;
-    if(!ghost&&!opts.flat)sh+=`<ellipse cx="${x+s*.03}" cy="${y+s*.07}" rx="${s*.4}" ry="${s*.38}" fill="#000" opacity=".35"/>`;
-    fr+=fruitSVG(f.k,x,y,s,col)}
+    const mx=ox+c*s+s/2+b*s/2, my=oy+r*s+s/2+a*s/2, w=s*1.1, h=w*80/300;
+    vine+=`<image href="${FA}leafy_branch.png" x="${mx-w/2}" y="${my-h/2}" width="${w}" height="${h}" transform="rotate(${a?90:0} ${mx} ${my})"/>`}
+  for(const [r,c] of cells){const x=ox+c*s+s/2,y=oy+r*s+s/2,z=s*.98;
+    if(!ghost&&!opts.flat)sh+=`<ellipse cx="${x+s*.03}" cy="${y+s*.1}" rx="${s*.36}" ry="${s*.3}" fill="#000" opacity=".4"/>`;
+    fr+=`<image href="${FA}${FIMG[f.k]}.png" x="${x-z/2}" y="${y-z/2}" width="${z}" height="${z}"/>`}
   g.insertAdjacentHTML('beforeend',ghost?`<g opacity=".42">${vine+fr}</g>`:sh+vine+fr);
 }
 function drawBalloonPiece(g,pi,cells,s,ox=0,oy=0,opts={}){
@@ -629,7 +643,7 @@ function heroAssemble(){
     drawPiece(g,pi,cellsP[pi],s);inflate(g,200+i*130);
     g.style.cursor='pointer';
     g.addEventListener('pointerdown',e=>{e.stopPropagation();if(g.dataset.popped)return;g.dataset.popped=1;
-      popBalloons(hs,cellsP[pi].map(([r,c])=>[c*s+s/2,r*s+s/2]),PIECES[pi].color,s);
+      popBalloons(hs,cellsP[pi].map(([r,c])=>[c*s+s/2,r*s+s/2]),PIECES[pi].color,s,pi);
       g.animate([{opacity:1,transform:'scale(1)'},{opacity:1,transform:'scale(1.12)',offset:.5},{opacity:0,transform:'scale(1.2)'}],{duration:180,fill:'forwards'});
       setTimeout(()=>{if(run!==heroRun)return;g.getAnimations().forEach(a=>a.cancel());inflate(g,0);delete g.dataset.popped},2000)})});
   hs.onclick=null;
@@ -645,10 +659,11 @@ function popRays(layer,cx,cy,S,col='#ffffff'){
     ln.animate([{transform:'translate(0,0)',opacity:1},{transform:`translate(${dx*S*.28}px,${dy*S*.28}px)`,opacity:0}],{duration:260,easing:'cubic-bezier(.2,.7,.3,1)',fill:'forwards'})}
 }
 // лопание шариков: лучики и клочки латекса (для главной)
-function popBalloons(svg,pts,col,S){
+function popBalloons(svg,pts,col,S,pi){
   if(navigator.vibrate){try{navigator.vibrate(12)}catch(e){}}
   const lay=document.createElementNS(NS,'g');svg.appendChild(lay);
   pts.forEach(([cx,cy],i)=>setTimeout(()=>{
+    if(VIEW==='fruits'&&pi!=null){fruitBurst(lay,pi,cx,cy,S);return}
     popRays(lay,cx,cy,S,col);
     for(let k=0;k<6;k++){const a=k/6*Math.PI*2+Math.random()*.6,dist=S*(.55+Math.random()*.35);
       const sx=cx+Math.cos(a)*S*.2,sy=cy+Math.sin(a)*S*.2;const sh=document.createElementNS(NS,'path');
@@ -995,18 +1010,21 @@ function popAnim(done){
     const fixed=G.fixed.has(pi);
     g.innerHTML=fixed?`<ellipse cx="${cx}" cy="${cy}" rx="${S*.45}" ry="${S*.45}" fill="url(#f${pi})"/>`
       :`<ellipse cx="${cx}" cy="${cy}" rx="${S*.46}" ry="${S*.46}" fill="url(#g${pi})"/><path d="M${cx-S*.27} ${cy-S*.05} Q ${cx-S*.22} ${cy-S*.3} ${cx+S*.03} ${cy-S*.32}" stroke="#fff" stroke-width="${S*.075}" stroke-linecap="round" fill="none" opacity=".75"/>`;
-    lay.appendChild(g);balls.push({g,d,cx,cy,col:PIECES[pi].color})});
+    if(VIEW==='fruits')g.innerHTML=`<image href="${FA}${FIMG[FRUITS[pi].k]}.png" x="${cx-S*.49}" y="${cy-S*.49}" width="${S*.98}" height="${S*.98}" opacity="${fixed?.42:1}"/>`;
+    lay.appendChild(g);balls.push({g,d,cx,cy,col:PIECES[pi].color,pi})});
   setTimeout(()=>groups.forEach(g=>g.style.opacity=0),240);
   const WAVE=900, base=280;
   let lastBuzz=0;
-  balls.forEach(({g,d,cx,cy,col})=>{
+  balls.forEach(({g,d,cx,cy,col,pi})=>{
     const t=base+(d/maxD)*WAVE+Math.random()*60;
-    g.animate([{transform:'scale(1)'},{transform:'scale(.72)',offset:.55},{transform:'scale(1.3)',opacity:.9,offset:.8},{transform:'scale(1.5)',opacity:0}],
+    if(VIEW==='fruits')g.animate([{transform:'scale(1)'},{transform:'scale(.8)',offset:.6},{opacity:0,transform:'scale(.8)'}],{duration:220,delay:t+60,fill:'forwards'});
+    else g.animate([{transform:'scale(1)'},{transform:'scale(.72)',offset:.55},{transform:'scale(1.3)',opacity:.9,offset:.8},{transform:'scale(1.5)',opacity:0}],
       {duration:300,delay:t,easing:'ease-in',fill:'forwards'});
     // брызги
     setTimeout(()=>{
       if(navigator.vibrate&&Date.now()-lastBuzz>70){try{navigator.vibrate(8)}catch(e){}lastBuzz=Date.now()}
       const sp=document.createElementNS(NS,'g');lay.appendChild(sp);
+      if(VIEW==='fruits'){fruitBurst(sp,pi,cx,cy,S);setTimeout(()=>sp.remove(),600);return}
       // «хлоп» — лучики
       popRays(sp,cx,cy,S,col);
       // клочки латекса
