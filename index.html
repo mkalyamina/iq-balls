@@ -434,17 +434,19 @@ const FA='assets/fruits/';
 // «нажатое» состояние фрукта: лопнувшая картинка + брызги сока
 function fruitBurst(layer,pi,cx,cy,S){
   const k=FRUITS[pi].k,sz=S*1.05;
+  // сок: брызги своего цвета разлетаются и тают
   const sp=document.createElementNS(NS,'image');sp.setAttribute('href',FA+'juice_splash_'+FJUICE[k]+'.png');
   sp.setAttribute('x',cx-sz/2);sp.setAttribute('y',cy-sz/2);sp.setAttribute('width',sz);sp.setAttribute('height',sz);
-  sp.style.transformBox='fill-box';sp.style.transformOrigin='center';layer.appendChild(sp);
-  sp.animate([{transform:'scale(.4)',opacity:.95},{transform:'scale(1.5)',opacity:0}],{duration:520,easing:'cubic-bezier(.2,.7,.3,1)',fill:'forwards'});
-  const x=document.createElementNS(NS,'image');x.setAttribute('href',FA+'x_'+FIMG[k]+'.png');
-  x.setAttribute('x',cx-sz/2);x.setAttribute('y',cy-sz/2);x.setAttribute('width',sz);x.setAttribute('height',sz);
-  x.style.transformBox='fill-box';x.style.transformOrigin='center';layer.appendChild(x);
-  x.animate([{transform:'scale(.9)',opacity:1},{transform:'scale(1.12)',opacity:1,offset:.45},{transform:'scale(1.25)',opacity:0}],{duration:560,easing:'ease-out',fill:'forwards'});
+  sp.style.transformBox='fill-box';sp.style.transformOrigin='center';sp.setAttribute('transform',`rotate(${Math.random()*360} ${cx} ${cy})`);layer.appendChild(sp);
+  sp.animate([{transform:'scale(.3)',opacity:1},{transform:'scale(1.25)',opacity:1,offset:.45},{transform:'scale(1.55)',opacity:0}],{duration:650,easing:'cubic-bezier(.2,.7,.3,1)',fill:'forwards'});
+  // фрукт сплющивается, как будто раздавили, и исчезает
+  const f=document.createElementNS(NS,'image');f.setAttribute('href',FA+FIMG[k]+'.png');
+  f.setAttribute('x',cx-S*.49);f.setAttribute('y',cy-S*.49);f.setAttribute('width',S*.98);f.setAttribute('height',S*.98);
+  f.style.transformBox='fill-box';f.style.transformOrigin='50% 85%';layer.appendChild(f);
+  f.animate([{transform:'scale(1,1)'},{transform:'scale(1.25,.65)',offset:.4},{transform:'scale(1.35,.35)',opacity:0}],{duration:300,easing:'ease-in',fill:'forwards'});
 }
 let VIEW=(()=>{try{return JSON.parse(localStorage.getItem('balls.v2')||'{}').view||'balloons'}catch(e){return 'balloons'}})();
-if(VIEW==='fruits'){PIECES.forEach((p,i)=>p.color=FRUITS[i].c);Object.values(FIMG).forEach(n=>{new Image().src=FA+n+'.png';new Image().src=FA+'x_'+n+'.png'});['red','orange','green'].forEach(c=>new Image().src=FA+'juice_splash_'+c+'.png')}
+if(VIEW==='fruits'){PIECES.forEach((p,i)=>p.color=FRUITS[i].c);Object.values(FIMG).forEach(n=>{new Image().src=FA+n+'.png'});['red','orange','green'].forEach(c=>new Image().src=FA+'juice_splash_'+c+'.png')}
 (function(){const defs=$('#defs');
   const add=(id,col)=>{const g=document.createElementNS(NS,'radialGradient');g.id=id;g.setAttribute('cx','35%');g.setAttribute('cy','30%');g.setAttribute('r','75%');
     g.innerHTML=`<stop offset="0" stop-color="${mix(col,'#ffffff',.55)}"/><stop offset=".45" stop-color="${col}"/><stop offset="1" stop-color="${mix(col,'#000000',.35)}"/>`;defs.appendChild(g)};
@@ -1017,14 +1019,14 @@ function popAnim(done){
   let lastBuzz=0;
   balls.forEach(({g,d,cx,cy,col,pi})=>{
     const t=base+(d/maxD)*WAVE+Math.random()*60;
-    if(VIEW==='fruits')g.animate([{transform:'scale(1)'},{transform:'scale(.8)',offset:.6},{opacity:0,transform:'scale(.8)'}],{duration:220,delay:t+60,fill:'forwards'});
+    if(VIEW==='fruits')g.animate([{opacity:1},{opacity:0}],{duration:1,delay:t+200,fill:'forwards'});
     else g.animate([{transform:'scale(1)'},{transform:'scale(.72)',offset:.55},{transform:'scale(1.3)',opacity:.9,offset:.8},{transform:'scale(1.5)',opacity:0}],
       {duration:300,delay:t,easing:'ease-in',fill:'forwards'});
     // брызги
     setTimeout(()=>{
       if(navigator.vibrate&&Date.now()-lastBuzz>70){try{navigator.vibrate(8)}catch(e){}lastBuzz=Date.now()}
       const sp=document.createElementNS(NS,'g');lay.appendChild(sp);
-      if(VIEW==='fruits'){fruitBurst(sp,pi,cx,cy,S);setTimeout(()=>sp.remove(),600);return}
+      if(VIEW==='fruits'){fruitBurst(sp,pi,cx,cy,S);setTimeout(()=>sp.remove(),700);return}
       // «хлоп» — лучики
       popRays(sp,cx,cy,S,col);
       // клочки латекса
