@@ -724,6 +724,7 @@ function startLevel(n){
   $('#gCat').textContent=CATS.find(c=>c.id===L.cat).name;$('#gCat').style.background=CAT_HEX[L.cat];$('#gCat').style.color='#fff';
   
   document.querySelectorAll('.screen').forEach(e=>e.classList.toggle('on',e.id==='game'));
+  $('#board').dataset.key='';$('#tray').dataset.level='';
   render();fitBoard();startTimer();refreshWallet();introAnim();
   if(!S0.tut&&!window.NO_TUT)setTimeout(()=>tutStart(),1500);
 }
@@ -748,19 +749,30 @@ function fitBoard(){
 }
 window.addEventListener('resize',()=>{if(G)fitBoard()});
 function render(){
-  const b=$('#board');boardSvg(b,S);const g=document.createElementNS(NS,'g');b.appendChild(g);
-  for(let pi=0;pi<12;pi++){const cells=cellsOf(G.grid,pi);if(!cells.length)continue;
-    const pg=document.createElementNS(NS,'g');pg.setAttribute('class','bp'+(G.fixed.has(pi)?' fixed':' mine'));pg.dataset.pi=pi;g.appendChild(pg);
-    drawPiece(pg,pi,cells,S,0,0,{fixed:G.fixed.has(pi)})}
+  // поле перерисовываем только если на нём что-то поменялось (иначе картинки мигают)
+  const b=$('#board');const bkey=G.L.n+'|'+G.grid.join(',');
+  if(b.dataset.key!==bkey||!b.querySelector('#preview')){
+    b.dataset.key=bkey;boardSvg(b,S);const g=document.createElementNS(NS,'g');b.appendChild(g);
+    for(let pi=0;pi<12;pi++){const cells=cellsOf(G.grid,pi);if(!cells.length)continue;
+      const pg=document.createElementNS(NS,'g');pg.setAttribute('class','bp'+(G.fixed.has(pi)?' fixed':' mine'));pg.dataset.pi=pi;g.appendChild(pg);
+      drawPiece(pg,pi,cells,S,0,0,{fixed:G.fixed.has(pi)})}
+    const prev=document.createElementNS(NS,'g');prev.id='preview';b.appendChild(prev);
+  }
   if(G.justPlaced!=null){const jg=b.querySelector(`.bp[data-pi="${G.justPlaced}"]`);if(jg)inflate(jg,0);G.justPlaced=null}
-  const prev=document.createElementNS(NS,'g');prev.id='preview';b.appendChild(prev);
-  const tray=$('#tray');tray.innerHTML='';
-  G.free.forEach(pi=>{const d=document.createElement('div');const on=G.onBoard[pi];
-    d.className='slot'+(on?' empty':'')+(G.sel===pi&&!on&&!G.hintPick?' sel':'')+(G.hintPick&&!on?' pick':'');d.dataset.pi=pi;
-    if(!on){const cells=G.shape[pi];const h=Math.max(...cells.map(c=>c[0]))+1,w=Math.max(...cells.map(c=>c[1]))+1;
-      const s=document.createElementNS(NS,'svg');s.setAttribute('viewBox',`-8 -8 ${w*20+16} ${h*20+16}`);s.style.width=Math.min(w*22+10,104)+'px';
-      drawPiece(s,pi,cells,20);d.appendChild(s)}
-    tray.appendChild(d)});
+  // колонка фигур: меняем только те карточки, у которых что-то изменилось
+  const tray=$('#tray');
+  if(tray.dataset.level!==String(G.L.n)){tray.innerHTML='';tray.dataset.level=G.L.n}
+  G.free.forEach((pi,idx)=>{const on=G.onBoard[pi];
+    const cls='slot'+(on?' empty':'')+(G.sel===pi&&!on&&!G.hintPick?' sel':'')+(G.hintPick&&!on?' pick':'');
+    const skey=on?'on':JSON.stringify(G.shape[pi]);
+    let d=tray.querySelector(`.slot[data-pi="${pi}"]`);
+    if(!d){d=document.createElement('div');d.dataset.pi=pi;tray.appendChild(d)}
+    d.className=cls;d.style.opacity='';
+    if(d.dataset.key!==skey){d.dataset.key=skey;d.innerHTML='';
+      if(!on){const cells=G.shape[pi];const h=Math.max(...cells.map(c=>c[0]))+1,w=Math.max(...cells.map(c=>c[1]))+1;
+        const sv=document.createElementNS(NS,'svg');sv.setAttribute('viewBox',`-8 -8 ${w*20+16} ${h*20+16}`);sv.style.width=Math.min(w*22+10,104)+'px';
+        drawPiece(sv,pi,cells,20);d.appendChild(sv)}}
+  });
   $('#gLeft').textContent=G.free.filter(pi=>!G.onBoard[pi]).length;$('#gMoves').textContent=G.moves;
   const selOk=G.sel!=null&&!G.onBoard[G.sel];$('#cRot').disabled=!selOk;$('#cFlip').disabled=!selOk;
 }
@@ -956,8 +968,8 @@ function useHint(pi){
   const moved=[...new Set(target.map(([r,c])=>G.grid[r*W+c]).filter(v=>v>=0&&v!==pi))];moved.forEach(lift);if(G.onBoard[pi])lift(pi);
   G.hints++;const mr=Math.min(...target.map(c=>c[0])),mc=Math.min(...target.map(c=>c[1]));
   place(pi,norm(target),mr,mc);
-  const pv=$('#preview');if(pv){target.forEach(([r,c])=>pv.insertAdjacentHTML('beforeend',`<circle cx="${c*S+S/2}" cy="${r*S+S/2}" r="${S*.48}" fill="none" stroke="#FFC61A" stroke-width="3"/>`));
-    pv.animate([{opacity:1},{opacity:1,offset:.6},{opacity:0}],{duration:1400,fill:'forwards'})}
+  const pv=$('#preview');if(pv){const hl=document.createElementNS(NS,'g');pv.appendChild(hl);target.forEach(([r,c])=>hl.insertAdjacentHTML('beforeend',`<circle cx="${c*S+S/2}" cy="${r*S+S/2}" r="${S*.48}" fill="none" stroke="#FFC61A" stroke-width="3"/>`));
+    hl.animate([{opacity:1},{opacity:1,offset:.6},{opacity:0}],{duration:1400,fill:'forwards'}).onfinish=()=>hl.remove()}
   if(!G.done)toast(moved.length?'Фигура на своём месте. Мешавшие фигуры вернулись вниз':'Фигура на своём месте');
 }
 function skipLevel(){const n=G.L.n;S0.skipped[n]=true;S0.streak=0;save();G.done=true;stopTimer();closeAll();
