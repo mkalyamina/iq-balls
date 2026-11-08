@@ -630,7 +630,7 @@ $('#btnPlay').onclick=()=>startLevel(currentLevel());
 
 const isDone=n=>!!S0.done[n], isSkipped=n=>!!S0.skipped[n];
 const passed=n=>isDone(n)||isSkipped(n);
-function unlocked(n){const L=LEVELS[n-1];const first=LEVELS.find(l=>l.cat===L.cat).n;return n===first||passed(n-1)||passed(n)}
+function unlocked(n){return n===1||passed(n-1)||passed(n)}
 function currentLevel(){const l=LEVELS.find(l=>!passed(l.n)&&unlocked(l.n));return l?l.n:1}
 const totalStars=()=>Object.values(S0.done).reduce((a,b)=>a+b,0);
 function refreshWallet(){document.querySelectorAll('.wcnt').forEach(e=>e.textContent=S0.hints)}
@@ -691,26 +691,36 @@ function popBalloons(svg,pts,col,S,pi){
   setTimeout(()=>lay.remove(),pts.length*45+600);
 }
 /* ---------- MAP ---------- */
+/* Карта уровней: одна гирлянда из шариков, без деления на категории. Уровни открываются по порядку. */
+const LV_STOPS=['#9BC21C','#F2A01C','#E5372E','#7A2E8E','#2747A8'];
+function lvColor(n){const t=(n-1)/Math.max(1,LEVELS.length-1)*(LV_STOPS.length-1),i=Math.min(LV_STOPS.length-2,Math.floor(t));return mix(LV_STOPS[i],LV_STOPS[i+1],t-i)}
 function renderMap(){
   const box=$('#mapScroll');box.innerHTML='';const cur=currentLevel();
-  CATS.forEach(cat=>{
-    const ls=LEVELS.filter(l=>l.cat===cat.id);const doneN=ls.filter(l=>passed(l.n)).length;
-    const sec=document.createElement('div');sec.className='catsec';
-    sec.innerHTML=`<div class="cathead" style="background:${CAT_HEX[cat.id]}"><b>${cat.name}</b><span>${doneN}/${ls.length}</span></div>`;
-    const grid=document.createElement('div');grid.className='lgrid';
-    ls.forEach(L=>{
-      const ok=unlocked(L.n),st=S0.done[L.n]||0,sk=isSkipped(L.n),isCur=L.n===cur;
-      const t=document.createElement('button');t.id='node'+L.n;
-      t.className='ltile'+(ok?'':' locked')+(isCur?' cur':'')+(st?' done':'');
-      t.style.setProperty('--c',CAT_HEX[cat.id]);t.style.setProperty('--d',CAT_DARK[cat.id]);
-      t.innerHTML=`<span class="num">${ok?L.n:'🔒'}</span>`+
-        (st?`<span class="st">${'★'.repeat(st)}<i>${'★'.repeat(3-st)}</i></span>`:sk?`<span class="st sk">пропущен</span>`:isCur?`<span class="st go">старт</span>`:'');
-      t.onclick=()=>ok?openPreview(L.n):toast('Пройдите или пропустите предыдущий уровень');
-      grid.appendChild(t);
-    });
-    sec.appendChild(grid);box.appendChild(sec);
-  });
-  requestAnimationFrame(()=>{const n=$('#node'+cur);if(n){box.style.scrollBehavior='auto';box.scrollTop=n.offsetTop-box.clientHeight/2;box.style.scrollBehavior=''}});
+  const w=Math.max(260,box.clientWidth-(parseFloat(getComputedStyle(box).paddingLeft)||0)*2),cols=4,r=Math.min(30,w/cols/2.6),rowH=r*3.3;
+  const pts=LEVELS.map((L,i)=>{const row=Math.floor(i/cols),col=row%2?cols-1-i%cols:i%cols;return [w/cols*(col+.5),row*rowH+r*1.6,L.n]});
+  const H=Math.ceil(LEVELS.length/cols)*rowH+r;
+  let defs='',links='',balls='';
+  const state=n=>passed(n)?'done':n===cur?'cur':unlocked(n)?'open':'locked';
+  pts.forEach(([x,y,n],i)=>{const c=lvColor(n),s=state(n);
+    defs+=`<radialGradient id="mg${n}" cx="38%" cy="32%" r="70%"><stop offset="0" stop-color="${mix(c,'#ffffff',.45)}"/><stop offset=".55" stop-color="${c}"/><stop offset="1" stop-color="${mix(c,'#000000',.35)}"/></radialGradient>`;
+    if(i){const [x1,y1,n1]=pts[i-1],on=passed(n1),bend=x1>w/2?r*2.2:-r*2.2;
+      links+=`<path d="M${x1} ${y1} ${y1===y?`L${x} ${y}`:`C${x1+bend} ${y1} ${x+bend} ${y} ${x} ${y}`}" stroke="${on?mix(c,'#000000',.1):'#38383e'}" stroke-width="${r*.32}" fill="none" stroke-linecap="round"/>`}
+    let g='';
+    if(s==='locked')g=`<ellipse cx="${x}" cy="${y+r*.15}" rx="${r*.62}" ry="${r*.72}" fill="#3a3a40"/><text x="${x}" y="${y+r*.32}" text-anchor="middle" font-size="${r*.5}" fill="#77777f" font-weight="700">${n}</text>`;
+    else{const dk=mix(c,'#000000',.4);
+      if(s==='cur')g+=`<circle cx="${x}" cy="${y}" r="${r*1.22}" fill="none" stroke="#fff" stroke-width="${r*.09}" stroke-dasharray="${r*.3} ${r*.2}"><animateTransform attributeName="transform" type="rotate" from="0 ${x} ${y}" to="360 ${x} ${y}" dur="8s" repeatCount="indefinite"/></circle>`;
+      g+=`<path d="M${x-r*.16} ${y+r*1.1} L${x} ${y+r*.92} L${x+r*.16} ${y+r*1.1}Z" fill="${mix(c,'#000000',.15)}"/><ellipse cx="${x}" cy="${y}" rx="${r}" ry="${r*1.04}" fill="url(#mg${n})"/><path d="M${x-r*.62} ${y-r*.1} Q ${x-r*.58} ${y-r*.66} ${x-r*.05} ${y-r*.74}" stroke="#fff" stroke-width="${r*.13}" stroke-linecap="round" fill="none" opacity=".7"/>`+
+        `<text x="${x}" y="${y+r*.3}" text-anchor="middle" font-size="${r*.82}" font-weight="800" fill="#fff" style="paint-order:stroke" stroke="${dk}" stroke-width="${r*.08}">${n}</text>`;
+      const k=S0.done[n]||0;
+      if(k)for(let j=0;j<3;j++)g+=`<text x="${x+(j-1)*r*.44}" y="${y+r*1.75}" text-anchor="middle" font-size="${r*.42}" fill="${j<k?'#FFD84A':'#3a3a40'}">★</text>`;
+      else if(isSkipped(n))g+=`<text x="${x}" y="${y+r*1.72}" text-anchor="middle" font-size="${r*.36}" fill="#A9A4B5">пропущен</text>`;
+      else if(s==='cur')g+=`<text x="${x}" y="${y+r*1.72}" text-anchor="middle" font-size="${r*.4}" font-weight="700" fill="#fff">старт</text>`}
+    balls+=`<g data-n="${n}" style="cursor:pointer">${g}<circle cx="${x}" cy="${y}" r="${r*1.3}" fill="transparent"/></g>`});
+  const head=`<div style="display:flex;align-items:center;gap:10px;margin:14px 4px 10px"><div style="flex:1;height:8px;border-radius:4px;background:#2a2a2f;overflow:hidden"><div style="height:100%;width:${LEVELS.filter(l=>passed(l.n)).length/LEVELS.length*100}%;background:linear-gradient(90deg,${LV_STOPS.join(',')});background-size:${LEVELS.length/Math.max(1,LEVELS.filter(l=>passed(l.n)).length)*100}% 100%"></div></div><span style="color:#8a8396;font-size:14px">${LEVELS.filter(l=>passed(l.n)).length}/${LEVELS.length}</span></div>`;
+  box.innerHTML=head+`<svg id="garland" width="${w}" height="${H}" style="display:block;margin:auto;overflow:visible"><defs>${defs}</defs>${links}${balls}</svg>`;
+  $('#garland').addEventListener('click',e=>{const g=e.target.closest('g[data-n]');if(!g)return;const n=+g.dataset.n;
+    unlocked(n)?openPreview(n):toast('Сначала пройдите или пропустите уровень '+(n-1))});
+  requestAnimationFrame(()=>{const p=pts[cur-1];if(p){box.style.scrollBehavior='auto';box.scrollTop=p[1]-box.clientHeight/2+60;box.style.scrollBehavior=''}});
 }
 function openPreview(n){
   const L=LEVELS[n-1];const s=$('#pvBoard');boardSvg(s,30);const g=document.createElementNS(NS,'g');s.appendChild(g);
