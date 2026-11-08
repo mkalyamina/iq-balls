@@ -244,6 +244,7 @@ html,body{background:#000}
 .wintitle{font-size:30px;font-weight:700;letter-spacing:-.3px;margin:2px 0 6px;background:linear-gradient(90deg,#FF5DB1,#FFC61A,#9ACD32,#1E9BE8);-webkit-background-clip:text;background-clip:text;color:transparent}
 .winballs{display:flex;justify-content:center;gap:14px;margin:8px 0 22px;height:96px;align-items:flex-start}
 .viewsw{display:flex;gap:6px;justify-content:center;margin-top:12px}.viewsw button{background:#232327;color:#A9A4B5;border-radius:12px;padding:7px 14px;font-size:15px;font-weight:600}.viewsw button.on{background:#F4F1EA;color:#1A1A1D}
+.boardsw{display:flex;flex-wrap:nowrap;gap:3px;justify-content:center;align-items:center;margin-top:6px;color:#8a8396;font-size:12px;white-space:nowrap}.boardsw button{background:#232327;color:#A9A4B5;border-radius:9px;padding:4px 7px;font-size:12px;font-weight:600}.boardsw button.on{background:#F4F1EA;color:#1A1A1D}
 
 @media (max-width:559px){
   html,body{height:100%;overflow:hidden;position:fixed;inset:0}
@@ -273,7 +274,9 @@ body{-webkit-touch-callout:none}
       <button class="bigbtn green" id="btnPlay">Играть</button>
       <button class="ghostbtn" id="btnMap">Карта уровней</button>
       <button class="ghostbtn" id="btnRules">Как играть</button>
+      <button class="ghostbtn" onclick="location.href='new.html'">🧪 Новые фигуры (тест)</button>
       <div class="viewsw" id="viewSw"><button data-v="balloons">🎈 Шарики</button><button data-v="fruits">🍓 Фрукты</button></div>
+      <div class="boardsw" id="boardSw"><span>Поле:</span><button data-b="holes">Лунки</button><button data-b="quilt">Стёжка</button><button data-b="tiles">Плитки</button><button data-b="dots">Точки</button><button data-b="plus">Плюсы</button></div>
       <div class="stats" id="homeStats"></div>
     </div>
   </section>
@@ -557,8 +560,18 @@ function drawBalloonPiece(g,pi,cells,s,ox=0,oy=0,opts={}){
   }
   g.insertAdjacentHTML('beforeend',glass?`<g opacity=".7">${neck}</g>${seg}<g opacity=".75">${kn+tl}</g>`:sh+neck+seg+kn+tl);
 }
-function boardSvg(svg,s){svg.setAttribute('viewBox',`0 0 ${W*s} ${H*s}`);let h='';
-  for(let r=0;r<H;r++)for(let c=0;c<W;c++)h+=`<circle cx="${c*s+s/2}" cy="${r*s+s/2}" r="${s*.36}" fill="url(#hole)"/>`;svg.innerHTML=h}
+/* Поле: вид клеток (выбирается на главной; общий для оригинала и всех версий) */
+let BOARD=(()=>{try{return localStorage.getItem('balls.board')||'holes'}catch(e){return 'holes'}})();
+const BOARD_STYLES={
+ holes:(c,r,s)=>`<circle cx="${c*s+s/2}" cy="${r*s+s/2}" r="${s*.36}" fill="url(#hole)"/>`,
+ quilt:(c,r,s)=>{const x=c*s,y=r*s,p=s*.06,w=s-2*p;return `<rect x="${x+p}" y="${y+p}" width="${w}" height="${w}" rx="${s*.26}" fill="url(#qg)"/><rect x="${x+p+s*.09}" y="${y+p+s*.09}" width="${w-s*.18}" height="${w-s*.18}" rx="${s*.18}" fill="none" stroke="#4A4A53" stroke-width="${s*.025}" stroke-dasharray="${s*.07} ${s*.05}"/>`},
+ tiles:(c,r,s)=>{const x=c*s,y=r*s,p=s*.05,w=s-2*p;return `<rect x="${x+p}" y="${y+p}" width="${w}" height="${w}" rx="${s*.14}" fill="#24242A"/><rect x="${x+p}" y="${y+p}" width="${w}" height="${s*.06}" rx="${s*.03}" fill="#ffffff" opacity=".05"/>`},
+ dots:(c,r,s)=>`<circle cx="${c*s+s/2}" cy="${r*s+s/2}" r="${s*.075}" fill="#55555E"/>`,
+ plus:(c,r,s)=>{const x=c*s+s/2,y=r*s+s/2,a=s*.12;return `<path d="M${x-a} ${y}H${x+a}M${x} ${y-a}V${y+a}" stroke="#4E4E57" stroke-width="${s*.045}" stroke-linecap="round"/>`},
+};
+function boardSvg(svg,s){svg.setAttribute('viewBox',`0 0 ${W*s} ${H*s}`);const f=BOARD_STYLES[BOARD]||BOARD_STYLES.holes;
+  let h=BOARD==='quilt'?'<defs><linearGradient id="qg" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#34343B"/><stop offset="1" stop-color="#26262C"/></linearGradient></defs>':'';
+  for(let r=0;r<H;r++)for(let c=0;c<W;c++)h+=f(c,r,s);svg.innerHTML=h}
 
 /* ---------- Персонаж отключён (будет позже). Фразы оставлены как подзаголовки. ---------- */
 function mascot(){return ''}
@@ -872,7 +885,7 @@ function tutOnPlace(){if(!TUT)return;if(TUT.step===1){TUT.step=2;stopHand();rend
 const ghost=$('#ghost');let drag=null;
 function appPoint(e){const r=$('#app').getBoundingClientRect();return{x:e.clientX-r.left,y:e.clientY-r.top}}
 function boardMetrics(){const b=$('#board').getBoundingClientRect(),a=$('#app').getBoundingClientRect();return{x:b.left-a.left,y:b.top-a.top,cell:S*b.width/(W*S)}}
-function beginDrag(e,pi,cells,grab){const m=boardMetrics();drag={pi,cells,grab,sx:e.clientX,sy:e.clientY,moved:false,cell:m.cell,id:e.pointerId,lift:e.pointerType==='touch'?m.cell*1.2:0}}
+function beginDrag(e,pi,cells,grab){ghost.dataset.popTok='';const m=boardMetrics();drag={pi,cells,grab,sx:e.clientX,sy:e.clientY,moved:false,cell:m.cell,id:e.pointerId,lift:e.pointerType==='touch'?m.cell*1.2:0}}
 function showGhost(p){
   const {cells,cell,grab}=drag;const h=Math.max(...cells.map(c=>c[0]))+1,w=Math.max(...cells.map(c=>c[1]))+1;
   ghost.setAttribute('viewBox',`0 0 ${w*S} ${h*S}`);ghost.style.width=w*cell+'px';ghost.style.height=h*cell+'px';
@@ -897,15 +910,26 @@ $('#board').addEventListener('pointerdown',e=>{
   if(G.hintPick&&!G.fixed.has(pi)){e.preventDefault();pickHint(pi);return}
   if(G.fixed.has(pi)){const bw=$('.boardwrap');bw.classList.remove('shake');void bw.offsetWidth;bw.classList.add('shake');toast('🔒 Эта фигура закреплена');flashLock(r,c);return}
   const abs=cellsOf(G.grid,pi);const mr=Math.min(...abs.map(c=>c[0])),mc=Math.min(...abs.map(c=>c[1]));
-  const cells=norm(abs);beginDrag(e,pi,cells,[r-mr,c-mc]);drag.from='board';drag.lift=0;
-  lift(pi);G.shape[pi]=cells;render();showGhost(p);e.preventDefault();
+  const cells=norm(abs);beginDrag(e,pi,cells,[r-mr,c-mc]);drag.from='board';drag.lift=0;drag.abs=abs;
+  // фигуру «берём» с поля только когда палец сдвинулся — при простом тапе она лопается на месте
+  drag.pending=true;drag.p=p;
+  // долгое нажатие (без движения) — фигура взята и держится под пальцем
+  drag.hold=setTimeout(()=>{if(drag&&drag.pending&&!drag.moved){drag.pending=false;drag.moved=true;lift(drag.pi);G.shape[drag.pi]=drag.cells;render();showGhost(drag.p)}},280);e.preventDefault();
 });
-window.addEventListener('pointermove',e=>{if(!drag||e.pointerId!==drag.id)return;
-  if(!drag.moved&&Math.hypot(e.clientX-drag.sx,e.clientY-drag.sy)>6){drag.moved=true;if(drag.from==='tray'){G.sel=drag.pi;render();document.querySelector(`.slot[data-pi="${drag.pi}"]`)?.style.setProperty('opacity','.25')}}
+window.addEventListener('pointermove',e=>{if(!drag||e.pointerId!==drag.id)return;drag.p=appPoint(e);
+  if(!drag.moved&&Math.hypot(e.clientX-drag.sx,e.clientY-drag.sy)>6){drag.moved=true;if(drag.pending){drag.pending=false;lift(drag.pi);G.shape[drag.pi]=drag.cells;render()}if(drag.from==='tray'){G.sel=drag.pi;render();document.querySelector(`.slot[data-pi="${drag.pi}"]`)?.style.setProperty('opacity','.25')}}
   if(drag.moved)showGhost(appPoint(e))});
-function endDrag(e){if(!drag||(e&&e.pointerId!==drag.id))return;const d=drag;drag=null;ghost.style.display='none';$('#preview')&&($('#preview').innerHTML='');
-  if(!d.moved){if(d.from==='tray'){if(G.sel===d.pi)G.shape[d.pi]=rot(G.shape[d.pi]);G.sel=d.pi}else G.sel=d.pi;render();return}
-  if(d.target)place(d.pi,d.cells,d.target[0],d.target[1]);else{render();if(d.from==='board')toast('Фигура вернулась вниз')}}
+function endDrag(e){if(!drag||(e&&e.pointerId!==drag.id))return;const d=drag;drag=null;clearTimeout(d.hold);ghost.style.display='none';$('#preview')&&($('#preview').innerHTML='');
+  if(!d.moved){if(e&&e.type==='pointercancel'){render();return}if(d.from==='tray'){if(G.sel===d.pi)G.shape[d.pi]=rot(G.shape[d.pi]);G.sel=d.pi;render()}else{lift(d.pi);G.shape[d.pi]=d.cells;G.sel=d.pi;render();popOff(d)}return}
+  if(d.target)place(d.pi,d.cells,d.target[0],d.target[1]);else{render();popGhost(d)}}
+// отпустили в неправильном месте: фигура лопается там, где её отпустили, и надувается в колонке
+function popGhost(d){const reduce=window.matchMedia&&matchMedia('(prefers-reduced-motion: reduce)').matches;
+  if(reduce||!ghost.firstChild){trayInflate(d.pi);return}
+  const tok=String(Math.random());ghost.dataset.popTok=tok;ghost.dataset.k='';
+  const g=document.createElementNS(NS,'g');while(ghost.firstChild)g.appendChild(ghost.firstChild);ghost.appendChild(g);
+  ghost.style.overflow='visible';ghost.style.display='block';popPiece(ghost,g,d.pi,d.cells,S);
+  setTimeout(()=>{if(ghost.dataset.popTok===tok&&!drag){ghost.style.display='none';ghost.innerHTML=''}},800);trayInflate(d.pi)}
+function trayInflate(pi){const sv=document.querySelector(`#tray .slot[data-pi="${pi}"] svg`);if(sv){sv.style.transformBox='fill-box';sv.style.transformOrigin='center';inflate(sv,220)}}
 window.addEventListener('pointerup',endDrag);window.addEventListener('pointercancel',endDrag);
 
 $('#cRot').onclick=()=>{if(G.sel==null||G.onBoard[G.sel])return;G.shape[G.sel]=rot(G.shape[G.sel]);render()};
@@ -1014,45 +1038,26 @@ function balloonIcon(on){
 function popAnim(done){
   const reduce=window.matchMedia&&matchMedia('(prefers-reduced-motion: reduce)').matches;
   const b=$('#board');if(reduce||!b){setTimeout(done,350);return}
-  const groups=[...b.querySelectorAll('.bp')];
-  // 1) перемычки тают
-  groups.forEach(g=>g.querySelectorAll('rect').forEach(r=>r.animate([{opacity:1},{opacity:0}],{duration:250,fill:'forwards'})));
-  // 2) шарики заменяем отдельными, чтобы анимировать каждый
-  const lay=document.createElementNS(NS,'g');b.appendChild(lay);
-  const cr=(H-1)/2,cc=(W-1)/2;let maxD=0;const balls=[];
-  G.grid.forEach((pi,i)=>{const r=Math.floor(i/W),c=i%W,cx=c*S+S/2,cy=r*S+S/2;
-    const d=Math.hypot(r-cr,(c-cc)*1.2);maxD=Math.max(maxD,d);
-    const g=document.createElementNS(NS,'g');g.style.transformBox='fill-box';g.style.transformOrigin='center';
-    const fixed=G.fixed.has(pi);
-    g.innerHTML=fixed?`<ellipse cx="${cx}" cy="${cy}" rx="${S*.45}" ry="${S*.45}" fill="url(#f${pi})"/>`
-      :`<ellipse cx="${cx}" cy="${cy}" rx="${S*.46}" ry="${S*.46}" fill="url(#g${pi})"/><path d="M${cx-S*.27} ${cy-S*.05} Q ${cx-S*.22} ${cy-S*.3} ${cx+S*.03} ${cy-S*.32}" stroke="#fff" stroke-width="${S*.075}" stroke-linecap="round" fill="none" opacity=".75"/>`;
-    if(VIEW==='fruits')g.innerHTML=`<image href="${FA}${FIMG[FRUITS[pi].k]}${FX}" x="${cx-S*.49}" y="${cy-S*.49}" width="${S*.98}" height="${S*.98}" opacity="${fixed?.42:1}"/>`;
-    lay.appendChild(g);balls.push({g,d,cx,cy,col:PIECES[pi].color,pi})});
-  setTimeout(()=>groups.forEach(g=>g.style.opacity=0),240);
-  const WAVE=900, base=280;
-  let lastBuzz=0;
-  balls.forEach(({g,d,cx,cy,col,pi})=>{
-    const t=base+(d/maxD)*WAVE+Math.random()*60;
-    if(VIEW==='fruits')g.animate([{opacity:1},{opacity:0}],{duration:1,delay:t+200,fill:'forwards'});
-    else g.animate([{transform:'scale(1)'},{transform:'scale(.72)',offset:.55},{transform:'scale(1.3)',opacity:.9,offset:.8},{transform:'scale(1.5)',opacity:0}],
-      {duration:300,delay:t,easing:'ease-in',fill:'forwards'});
-    // брызги
-    setTimeout(()=>{
-      if(navigator.vibrate&&Date.now()-lastBuzz>70){try{navigator.vibrate(8)}catch(e){}lastBuzz=Date.now()}
-      const sp=document.createElementNS(NS,'g');lay.appendChild(sp);
-      if(VIEW==='fruits'){fruitBurst(sp,pi,cx,cy,S);setTimeout(()=>sp.remove(),700);return}
-      // «хлоп» — лучики
-      popRays(sp,cx,cy,S,col);
-      // клочки латекса
-      const n=6;for(let k=0;k<n;k++){const a=k/n*Math.PI*2+Math.random()*.6,dist=S*(.55+Math.random()*.35);
-        const sx=cx+Math.cos(a)*S*.2,sy=cy+Math.sin(a)*S*.2;
-        const shred=document.createElementNS(NS,'path');shred.setAttribute('d',`M${sx} ${sy} q ${S*.12} ${-S*.05} ${S*.17} ${S*.08} q ${-S*.06} ${S*.1} ${-S*.17} ${-S*.02}z`);
-        shred.setAttribute('fill',col);sp.appendChild(shred);
-        shred.animate([{transform:'translate(0,0) rotate(0deg)',opacity:1},{transform:`translate(${Math.cos(a)*dist}px,${Math.sin(a)*dist+S*.15}px) rotate(${(Math.random()*2-1)*160}deg)`,opacity:0}],{duration:520,easing:'cubic-bezier(.2,.7,.3,1)',fill:'forwards'})}
-      setTimeout(()=>sp.remove(),560);
-    },t+200);
-  });
-  setTimeout(done,base+WAVE+60+300+250);
+  // как на главном экране: фигуры лопаются целиком, по очереди от центра поля
+  const cr=(H-1)/2,cc=(W-1)/2;
+  const items=[...b.querySelectorAll('.bp')].map(g=>{const pi=+g.dataset.pi,cells=cellsOf(G.grid,pi);
+    const d=Math.hypot(cells.reduce((a,x)=>a+x[0],0)/cells.length-cr,(cells.reduce((a,x)=>a+x[1],0)/cells.length-cc)*1.2);return{g,pi,cells,d}}).sort((x,y)=>x.d-y.d);
+  const STEP=140,BASE=250;
+  items.forEach(({g,pi,cells},i)=>setTimeout(()=>popPiece(b,g,pi,cells,S),BASE+i*STEP));
+  setTimeout(done,BASE+items.length*STEP+700);
+}
+// «лопнуть» фигуру: та же анимация, что при тапе на главном экране
+function popPiece(svg,g,pi,cells,s){
+  popBalloons(svg,cells.map(([r,c])=>[c*s+s/2,r*s+s/2]),PIECES[pi].color,s,pi);
+  g.style.transformBox='fill-box';g.style.transformOrigin='center';
+  g.animate([{opacity:1,transform:'scale(1)'},{opacity:1,transform:'scale(1.12)',offset:.5},{opacity:0,transform:'scale(1.2)'}],{duration:180,fill:'forwards'});
+}
+// тап по своей фигуре на поле: она лопается и снова надувается в колонке справа
+function popOff(d){
+  const b=$('#board');if(!b||!d.abs)return;
+  const reduce=window.matchMedia&&matchMedia('(prefers-reduced-motion: reduce)').matches;
+  if(!reduce){const g=document.createElementNS(NS,'g');b.appendChild(g);drawPiece(g,d.pi,d.abs,S);popPiece(b,g,d.pi,d.abs,S);setTimeout(()=>g.remove(),400)}
+  trayInflate(d.pi);
 }
 $('#winNext').onclick=()=>startLevel(G.L.n+1);
 $('#winMap').onclick=()=>go('map');
@@ -1069,6 +1074,7 @@ $('#loseSkip').onclick=()=>withAd(()=>skipLevel());
 let tt;function toast(m){const t=$('#toast');t.textContent=m;t.classList.add('on');clearTimeout(tt);tt=setTimeout(()=>t.classList.remove('on'),1700)}
 
 renderHome();refreshWallet();
+document.querySelectorAll('#boardSw button').forEach(b=>{b.classList.toggle('on',b.dataset.b===BOARD);b.onclick=()=>{BOARD=b.dataset.b;try{localStorage.setItem('balls.board',BOARD)}catch(e){}document.querySelectorAll('#boardSw button').forEach(x=>x.classList.toggle('on',x===b));const bd=$('#board');if(bd)bd.dataset.key=''}});
 document.querySelectorAll('#viewSw button').forEach(b=>{b.classList.toggle('on',b.dataset.v===VIEW);b.onclick=()=>{if(b.dataset.v===VIEW)return;S0.view=b.dataset.v;save();location.reload()}});
 (function(){const h=location.hash.slice(1);if(h==='map'||h==='rules')go(h);else if(/^level-\d+$/.test(h))startLevel(Math.min(+h.split('-')[1],LEVELS.length))})();
 </script>

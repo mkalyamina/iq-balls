@@ -1,6 +1,6 @@
 // Офлайн: сначала сеть (без HTTP-кэша), при отсутствии сети — сохранённая копия.
-const CACHE = 'iq-balls-v22';
-const CORE = ['./', './index.html', './manifest.webmanifest', './apple-touch-icon.png', './icon-192.png', './icon-512.png', './favicon.png'];
+const CACHE = 'iq-balls-v27';
+const CORE = ['./', './index.html', './new.html', './new_v1.html', './new_v2.html', './new_v3.html', './manifest.webmanifest', './apple-touch-icon.png', './icon-192.png', './icon-512.png', './favicon.png'];
 self.addEventListener('install', e => { self.skipWaiting(); e.waitUntil(caches.open(CACHE).then(c => c.addAll(CORE.map(u => new Request(u, {cache: 'reload'})))).catch(() => {})); });
 self.addEventListener('activate', e => { e.waitUntil(caches.keys().then(ks => Promise.all(ks.filter(k => k !== CACHE).map(k => caches.delete(k)))).then(() => self.clients.claim())); });
 self.addEventListener('fetch', e => {
