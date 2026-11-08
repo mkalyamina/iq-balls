@@ -570,9 +570,10 @@ const BOARD_STYLES={
  dots:(c,r,s)=>`<circle cx="${c*s+s/2}" cy="${r*s+s/2}" r="${s*.075}" fill="#55555E"/>`,
  plus:(c,r,s)=>{const x=c*s+s/2,y=r*s+s/2,a=s*.12;return `<path d="M${x-a} ${y}H${x+a}M${x} ${y-a}V${y+a}" stroke="#4E4E57" stroke-width="${s*.045}" stroke-linecap="round"/>`},
 };
-function boardSvg(svg,s){svg.setAttribute('viewBox',`0 0 ${W*s} ${H*s}`);const f=BOARD_STYLES[BOARD]||BOARD_STYLES.holes;
+// skip — клетки под закреплёнными фигурами: там узор поля не рисуем, чтобы он не просвечивал сквозь полупрозрачные фигуры
+function boardSvg(svg,s,skip){svg.setAttribute('viewBox',`0 0 ${W*s} ${H*s}`);const f=BOARD_STYLES[BOARD]||BOARD_STYLES.holes;
   let h=BOARD==='quilt'?'<defs><linearGradient id="qg" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#34343B"/><stop offset="1" stop-color="#26262C"/></linearGradient></defs>':'';
-  for(let r=0;r<H;r++)for(let c=0;c<W;c++)h+=f(c,r,s);svg.innerHTML=h}
+  for(let r=0;r<H;r++)for(let c=0;c<W;c++)if(!skip||!skip.has(r*W+c))h+=f(c,r,s);svg.innerHTML=h}
 
 /* ---------- Персонаж отключён (будет позже). Фразы оставлены как подзаголовки. ---------- */
 function mascot(){return ''}
@@ -723,8 +724,8 @@ function renderMap(){
   requestAnimationFrame(()=>{const p=pts[cur-1];if(p){box.style.scrollBehavior='auto';box.scrollTop=p[1]-box.clientHeight/2+60;box.style.scrollBehavior=''}});
 }
 function openPreview(n){
-  const L=LEVELS[n-1];const s=$('#pvBoard');boardSvg(s,30);const g=document.createElementNS(NS,'g');s.appendChild(g);
-  const sol=L.solution.split(',').map(Number);L.placed.forEach(pi=>drawPiece(g,pi,cellsOf(sol,pi),30));
+  const L=LEVELS[n-1];const s=$('#pvBoard');const sol=L.solution.split(',').map(Number);
+  boardSvg(s,30,new Set(sol.map((v,i)=>L.placed.includes(v)?i:-1).filter(i=>i>=0)));const g=document.createElementNS(NS,'g');s.appendChild(g);L.placed.forEach(pi=>drawPiece(g,pi,cellsOf(sol,pi),30));
   $('#pvCat').textContent=CATS.find(c=>c.id===L.cat).name;$('#pvCat').style.color=CAT_HEX[L.cat];
   $('#pvTitle').textContent='Уровень '+n;$('#pvFree').textContent=12-L.placed.length;
   $('#pvBest').textContent=S0.done[n]?'★'.repeat(S0.done[n]):isSkipped(n)?'пропущен':'—';
@@ -776,7 +777,7 @@ function render(){
   // поле перерисовываем только если на нём что-то поменялось (иначе картинки мигают)
   const b=$('#board');const bkey=G.L.n+'|'+G.grid.join(',');
   if(b.dataset.key!==bkey||!b.querySelector('#preview')){
-    b.dataset.key=bkey;boardSvg(b,S);const g=document.createElementNS(NS,'g');b.appendChild(g);
+    b.dataset.key=bkey;const skip=new Set();G.fixed.forEach(pi=>cellsOf(G.grid,pi).forEach(([r,c])=>skip.add(r*W+c)));boardSvg(b,S,skip);const g=document.createElementNS(NS,'g');b.appendChild(g);
     for(let pi=0;pi<12;pi++){const cells=cellsOf(G.grid,pi);if(!cells.length)continue;
       const pg=document.createElementNS(NS,'g');pg.setAttribute('class','bp'+(G.fixed.has(pi)?' fixed':' mine'));pg.dataset.pi=pi;g.appendChild(pg);
       drawPiece(pg,pi,cells,S,0,0,{fixed:G.fixed.has(pi)})}
