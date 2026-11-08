@@ -1034,16 +1034,16 @@ function checkWin(){if(G.grid.includes(-1))return;G.done=true;stopTimer();
     // заработанные шарики надуваются по очереди
     [...document.querySelectorAll('#winStars .wb.on')].forEach((b,i)=>inflate(b,350+i*260));
     [...document.querySelectorAll('#winStars .wb:not(.on)')].forEach(b=>b.animate([{opacity:0},{opacity:1}],{duration:300,delay:350+stars*260,fill:'backwards'}))})}
-// красный воздушный шарик для окна победы (on — надут, иначе — сдутый серый)
+// звезда для окна победы (on — золотая, иначе — серая), как звёзды на карте уровней
 function balloonIcon(on){
-  const c=on?'#F2262E':'#3A3A40', dk=mix(c,'#000000',.35), g=on?'url(#g9)':'#3A3A40';
-  const body=on?`<ellipse cx="30" cy="30" rx="22" ry="26" fill="${g}"/><path d="M15 26 Q 16 12 30 9" stroke="#fff" stroke-width="4" stroke-linecap="round" fill="none" opacity=".75"/><circle cx="37" cy="13" r="2" fill="#fff" opacity=".8"/>`
-    :`<path d="M30 14 C 44 14 46 34 38 46 C 35 52 25 52 22 46 C 14 34 16 14 30 14 Z" fill="${g}"/><path d="M24 22 Q 30 26 36 22 M23 34 Q 30 38 37 33" stroke="#2A2A2F" stroke-width="2" fill="none"/>`;
-  const knotY=on?56:51;
-  return `<svg class="wb${on?' on':''}" viewBox="0 0 60 80" width="62" height="82" style="overflow:visible;transform-box:fill-box;transform-origin:50% 70%">
-    ${on?'<ellipse cx="31" cy="34" rx="21" ry="25" fill="#000" opacity=".35"/>':''}${body}
-    <path d="M28 ${knotY} L 25 ${knotY+7} Q 30 ${knotY+9} 35 ${knotY+7} L 32 ${knotY} Z" fill="${c}" stroke="${dk}" stroke-width="1.5" stroke-linejoin="round"/>
-    <path d="M30 ${knotY+8} q -4 6 0 10 q 4 4 0 10" stroke="${on?'#bbb':'#444'}" stroke-width="1.6" fill="none"/></svg>`}
+  const pts=[];for(let i=0;i<10;i++){const a=-Math.PI/2+i*Math.PI/5,r=i%2?12.5:27;pts.push((30+r*Math.cos(a)).toFixed(1)+','+(38+r*Math.sin(a)).toFixed(1))}
+  const p=pts.join(' ');
+  return `<svg class="wb${on?' on':''}" viewBox="0 0 60 80" width="62" height="82" style="overflow:visible;transform-box:fill-box;transform-origin:50% 50%">
+    ${on?`<defs><linearGradient id="wsg" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#FFE98A"/><stop offset=".55" stop-color="#FFD84A"/><stop offset="1" stop-color="#F2A01C"/></linearGradient></defs>
+    <polygon points="${p}" transform="translate(1.5 3)" fill="#000" opacity=".35" stroke="#000" stroke-width="5" stroke-linejoin="round"/>
+    <polygon points="${p}" fill="url(#wsg)" stroke="#E08A00" stroke-width="5" stroke-linejoin="round"/>
+    <path d="M22 30 L27 22" stroke="#fff" stroke-width="3.5" stroke-linecap="round" opacity=".8"/>`
+    :`<polygon points="${p}" fill="#3A3A40" stroke="#3A3A40" stroke-width="5" stroke-linejoin="round"/>`}</svg>`}
 
 /* ---------- Победа: перемычки исчезают, шарики волной от центра сжимаются и лопаются брызгами ---------- */
 function popAnim(done){
