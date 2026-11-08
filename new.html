@@ -244,7 +244,7 @@ html,body{background:#000}
 .wintitle{font-size:30px;font-weight:700;letter-spacing:-.3px;margin:2px 0 6px;background:linear-gradient(90deg,#FF5DB1,#FFC61A,#9ACD32,#1E9BE8);-webkit-background-clip:text;background-clip:text;color:transparent}
 .winballs{display:flex;justify-content:center;gap:14px;margin:8px 0 22px;height:96px;align-items:flex-start}
 .viewsw{display:flex;gap:6px;justify-content:center;margin-top:12px}.viewsw button{background:#232327;color:#A9A4B5;border-radius:12px;padding:7px 14px;font-size:15px;font-weight:600}.viewsw button.on{background:#F4F1EA;color:#1A1A1D}
-.boardsw{display:flex;flex-wrap:nowrap;gap:3px;justify-content:center;align-items:center;margin-top:6px;color:#8a8396;font-size:12px;white-space:nowrap}.boardsw button{background:#232327;color:#A9A4B5;border-radius:9px;padding:4px 7px;font-size:12px;font-weight:600}.boardsw button.on{background:#F4F1EA;color:#1A1A1D}
+.boardsw{display:flex;flex-wrap:nowrap;gap:3px;justify-content:flex-start;align-items:center;margin-top:6px;color:#8a8396;font-size:12px;white-space:nowrap;overflow-x:auto;scrollbar-width:none;max-width:100%;padding:0 2px}.boardsw::-webkit-scrollbar{display:none}.boardsw>:first-child{margin-left:auto}.boardsw>:last-child{margin-right:auto}.boardsw button{flex:none}.boardsw button{background:#232327;color:#A9A4B5;border-radius:9px;padding:4px 7px;font-size:12px;font-weight:600}.boardsw button.on{background:#F4F1EA;color:#1A1A1D}
 
 @media (max-width:559px){
   html,body{height:100%;overflow:hidden;position:fixed;inset:0}
@@ -277,7 +277,7 @@ body{-webkit-touch-callout:none}
       <button class="ghostbtn" onclick="location.href='index.html'">← Старые фигуры</button>
       <div style="text-align:center;color:#8a8396;font-size:14px;margin:4px 0">Версии: <a href="index.html" style="color:#9ACD32">Оригинал</a> · <a href="new_v1.html" style="color:#9ACD32">1</a> · <a href="new_v2.html" style="color:#9ACD32">2</a> · <a href="new_v3.html" style="color:#9ACD32">3</a> · <b style="color:#fff">4</b></div>
       <div class="viewsw" id="viewSw"><button data-v="balloons">🎈 Шарики</button><button data-v="fruits">🍓 Фрукты</button></div>
-      <div class="boardsw" id="boardSw"><span>Поле:</span><button data-b="holes">Лунки</button><button data-b="quilt">Стёжка</button><button data-b="tiles">Плитки</button><button data-b="dots">Точки</button><button data-b="plus">Плюсы</button></div>
+      <div class="boardsw" id="boardSw"><span>Поле:</span><button data-b="holes">Лунки</button><button data-b="quilt">Стёжка</button><button data-b="tiles">Плитки</button><button data-b="dots">Точки</button><button data-b="plus">Плюсы</button><button data-b="ring">Кольца</button><button data-b="beads">Бусы</button><button data-b="ringplus">Кольца+</button></div>
       <div class="stats" id="homeStats"></div>
     </div>
   </section>
@@ -559,7 +559,7 @@ function drawBalloonPiece(g,pi,cells,s,ox=0,oy=0,opts={}){
     tl+=`<path d="M${nx+ux*s*.04+px*s*.02} ${ny+uy*s*.04+py*s*.02} L ${fx-ux*s*.02+px*s*.07} ${fy-uy*s*.02+py*s*.07}" stroke="${tlt}" stroke-width="${s*.025}" stroke-linecap="round" opacity="${fixed?.3:.8}"/>`;
     tl+=`<ellipse cx="${nx}" cy="${ny}" rx="${ux?s*.025:s*.045}" ry="${uy?s*.025:s*.045}" fill="${tdk}"/>`;
   }
-  g.insertAdjacentHTML('beforeend',glass?`<g opacity=".7">${neck}</g>${seg}<g opacity=".75">${kn+tl}</g>`:sh+neck+seg+kn+tl);
+  g.insertAdjacentHTML('beforeend',glass?`${seg}<g opacity=".75">${kn+tl}</g>`:sh+neck+seg+kn+tl);
 }
 /* Поле: вид клеток (выбирается на главной; общий для оригинала и всех версий) */
 let BOARD=(()=>{try{return localStorage.getItem('balls.board')||'holes'}catch(e){return 'holes'}})();
@@ -569,6 +569,9 @@ const BOARD_STYLES={
  tiles:(c,r,s)=>{const x=c*s,y=r*s,p=s*.05,w=s-2*p;return `<rect x="${x+p}" y="${y+p}" width="${w}" height="${w}" rx="${s*.14}" fill="#24242A"/><rect x="${x+p}" y="${y+p}" width="${w}" height="${s*.06}" rx="${s*.03}" fill="#ffffff" opacity=".05"/>`},
  dots:(c,r,s)=>`<circle cx="${c*s+s/2}" cy="${r*s+s/2}" r="${s*.075}" fill="#55555E"/>`,
  plus:(c,r,s)=>{const x=c*s+s/2,y=r*s+s/2,a=s*.12;return `<path d="M${x-a} ${y}H${x+a}M${x} ${y-a}V${y+a}" stroke="#4E4E57" stroke-width="${s*.045}" stroke-linecap="round"/>`},
+ ring:(c,r,s)=>`<circle cx="${c*s+s/2}" cy="${r*s+s/2}" r="${s*.34}" fill="none" stroke="#4E4E57" stroke-width="${s*.035}" stroke-dasharray="${s*.11} ${s*.07}"/>`,
+ beads:(c,r,s)=>`<circle cx="${c*s+s/2}" cy="${r*s+s/2}" r="${s*.34}" fill="none" stroke="#64646E" stroke-width="${s*.055}" stroke-linecap="round" stroke-dasharray="0 ${s*.1335}"/>`,
+ ringplus:(c,r,s)=>{const x=c*s+s/2,y=r*s+s/2,a=s*.08;return `<circle cx="${x}" cy="${y}" r="${s*.34}" fill="none" stroke="#45454D" stroke-width="${s*.03}" stroke-dasharray="${s*.09} ${s*.07}"/><path d="M${x-a} ${y}H${x+a}M${x} ${y-a}V${y+a}" stroke="#4E4E57" stroke-width="${s*.035}" stroke-linecap="round"/>`},
 };
 // узор поля рисуется на всё поле; в клетках из skip он скрыт (там стоит фигура) — markCells показывает/прячет его
 function boardSvg(svg,s,skip){svg.setAttribute('viewBox',`0 0 ${W*s} ${H*s}`);const f=BOARD_STYLES[BOARD]||BOARD_STYLES.holes;
