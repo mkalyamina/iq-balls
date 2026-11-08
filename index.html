@@ -244,6 +244,8 @@ html,body{background:#000}
 .wintitle{font-size:30px;font-weight:700;letter-spacing:-.3px;margin:2px 0 6px;background:linear-gradient(90deg,#FF5DB1,#FFC61A,#9ACD32,#1E9BE8);-webkit-background-clip:text;background-clip:text;color:transparent}
 .winballs{display:flex;justify-content:center;gap:14px;margin:8px 0 22px;height:96px;align-items:flex-start}
 .viewsw{display:flex;gap:6px;justify-content:center;margin-top:12px}.viewsw button{background:#232327;color:#A9A4B5;border-radius:12px;padding:7px 14px;font-size:15px;font-weight:600}.viewsw button.on{background:#F4F1EA;color:#1A1A1D}
+.boardpick{display:block;margin:8px auto 0;background:#232327;color:#A9A4B5;border-radius:999px;padding:6px 14px;font-size:13px;font-weight:600}.boardpick b{color:#F4F1EA}
+#boardGrid{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin:14px 0 18px}.btile{background:#141417;border:2px solid #2a2a2f;border-radius:14px;padding:8px 6px 6px;color:#A9A4B5;font-size:12px;font-weight:600;display:flex;flex-direction:column;gap:6px;align-items:stretch;min-width:0}.btile span{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.btile.on{border-color:#F4F1EA;color:#fff}
 .boardsw{display:flex;flex-wrap:nowrap;gap:3px;justify-content:flex-start;align-items:center;margin-top:6px;color:#8a8396;font-size:12px;white-space:nowrap;overflow-x:auto;scrollbar-width:none;max-width:100%;padding:0 2px}.boardsw::-webkit-scrollbar{display:none}.boardsw>:first-child{margin-left:auto}.boardsw>:last-child{margin-right:auto}.boardsw button{flex:none}.boardsw button{background:#232327;color:#A9A4B5;border-radius:9px;padding:4px 7px;font-size:12px;font-weight:600}.boardsw button.on{background:#F4F1EA;color:#1A1A1D}
 
 @media (max-width:559px){
@@ -276,7 +278,7 @@ body{-webkit-touch-callout:none}
       <button class="ghostbtn" id="btnRules">Как играть</button>
       <button class="ghostbtn" onclick="location.href='new.html'">🧪 Новые фигуры (тест)</button>
       <div class="viewsw" id="viewSw"><button data-v="balloons">🎈 Шарики</button><button data-v="fruits">🍓 Фрукты</button></div>
-      <div class="boardsw" id="boardSw"><span>Поле:</span><button data-b="holes">Лунки</button><button data-b="quilt">Стёжка</button><button data-b="tiles">Плитки</button><button data-b="dots">Точки</button><button data-b="plus">Плюсы</button><button data-b="ring">Кольца</button><button data-b="beads">Бусы</button><button data-b="ringplus">Кольца+</button></div>
+      <button class="boardpick" id="boardPick">Поле: <b id="boardName">Лунки</b> ›</button>
       <div class="stats" id="homeStats"></div>
     </div>
   </section>
@@ -325,6 +327,13 @@ body{-webkit-touch-callout:none}
   <div class="tut" id="tut"><div class="tutcard" id="tutCard"></div></div>
   <svg class="tutghost" id="tutGhost"></svg>
   <div class="tuthand" id="tutHand">👆</div>
+
+  <!-- Board style picker -->
+  <div class="modal" id="mBoard"><div class="sheet">
+    <h2>Вид поля</h2><div style="color:var(--muted)">Как отмечены клетки, куда ставить фигуры</div>
+    <div id="boardGrid"></div>
+    <button class="ghostbtn" data-close>Закрыть</button>
+  </div></div>
 
   <!-- Level preview sheet -->
   <div class="modal" id="mPreview"><div class="sheet">
@@ -655,7 +664,7 @@ const SQ=[11, 4, 4, 4, 9, 9, 11, 11, 0, 4, 0, 9, 6, 6, 0, 0, 0, 9, 10, 6, 6, 6, 
 function heroAssemble(){
   const hs=$('#heroSvg'),s=30,run=++heroRun;
   hs.setAttribute('viewBox',`0 0 ${SN*s} ${SN*s}`);hs.innerHTML='';hs.style.overflow='visible';
-  const midH=document.querySelector('#home .homemid').clientHeight;const side=Math.max(160,Math.min(330,midH*0.8,document.querySelector('#home').clientWidth-60));hs.style.height=side+'px';hs.style.width=side+'px';
+  const midH=document.querySelector('#home .homemid').clientHeight;const side=Math.max(90,Math.min(330,(midH-24)*0.9,document.querySelector('#home').clientWidth-60));hs.style.height=side+'px';hs.style.width=side+'px';
   const sol=SQ, PW=SN;const present=[...new Set(sol)];
   const cellsP=PIECES.map((_,pi)=>{const o=[];sol.forEach((v,i)=>{if(v===pi)o.push([Math.floor(i/PW),i%PW])});return o});
   // сразу квадрат: все фигуры целиком, с хвостиками; надуваются по очереди от центра
@@ -1091,7 +1100,15 @@ $('#loseSkip').onclick=()=>withAd(()=>skipLevel());
 let tt;function toast(m){const t=$('#toast');t.textContent=m;t.classList.add('on');clearTimeout(tt);tt=setTimeout(()=>t.classList.remove('on'),1700)}
 
 renderHome();refreshWallet();
-document.querySelectorAll('#boardSw button').forEach(b=>{b.classList.toggle('on',b.dataset.b===BOARD);b.onclick=()=>{BOARD=b.dataset.b;try{localStorage.setItem('balls.board',BOARD)}catch(e){}document.querySelectorAll('#boardSw button').forEach(x=>x.classList.toggle('on',x===b));const bd=$('#board');if(bd)bd.dataset.key=''}});
+const BOARD_NAMES={holes:'Лунки',quilt:'Стёжка',tiles:'Плитки',dots:'Точки',plus:'Плюсы',ring:'Кольца',beads:'Бусы',ringplus:'Кольца+'};
+function boardTile(k){const s=22,cols=3,rows=2;const f=BOARD_STYLES[k];let h=k==='quilt'?'<defs><linearGradient id="qg" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#34343B"/><stop offset="1" stop-color="#26262C"/></linearGradient></defs>':'';
+  for(let r=0;r<rows;r++)for(let c=0;c<cols;c++)h+=f(c,r,s);return `<svg viewBox="0 0 ${cols*s} ${rows*s}" style="width:100%;display:block">${h}</svg>`}
+function renderBoardPick(){$('#boardName').textContent=BOARD_NAMES[BOARD]||BOARD;
+  $('#boardGrid').innerHTML=Object.keys(BOARD_NAMES).map(k=>`<button class="btile${k===BOARD?' on':''}" data-b="${k}">${boardTile(k)}<span>${BOARD_NAMES[k]}</span></button>`).join('')}
+$('#boardPick').onclick=()=>{renderBoardPick();openM('#mBoard')};
+$('#boardGrid').onclick=e=>{const t=e.target.closest('.btile');if(!t)return;BOARD=t.dataset.b;try{localStorage.setItem('balls.board',BOARD)}catch(err){}
+  const bd=$('#board');if(bd)bd.dataset.key='';renderBoardPick();setTimeout(closeAll,180)};
+renderBoardPick();
 document.querySelectorAll('#viewSw button').forEach(b=>{b.classList.toggle('on',b.dataset.v===VIEW);b.onclick=()=>{if(b.dataset.v===VIEW)return;S0.view=b.dataset.v;save();location.reload()}});
 (function(){const h=location.hash.slice(1);if(h==='map'||h==='rules')go(h);else if(/^level-\d+$/.test(h))startLevel(Math.min(+h.split('-')[1],LEVELS.length))})();
 </script>
