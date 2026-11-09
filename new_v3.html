@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="ru">
+<html lang="en">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
@@ -11,7 +11,7 @@
 <link rel="apple-touch-icon" href="apple-touch-icon.png">
 <link rel="icon" type="image/png" href="favicon.png">
 <link rel="manifest" href="manifest.webmanifest">
-<title>The IQ Balls — новые фигуры, версия 3</title>
+<title>The IQ Balls — new pieces, version 3</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@400;500;600;700&display=swap" rel="stylesheet">
 <style>
@@ -268,24 +268,24 @@ body{-webkit-touch-callout:none}
   <!-- HOME -->
   <section class="screen on" id="home">
     <div class="homehead"><div></div><button class="wallet" data-shop>💡 <span class="wcnt">3</span><span class="plus">+</span></button></div>
-    <div class="logo"><h1>The IQ Balls</h1><p>Новые фигуры · версия 3</p></div>
+    <div class="logo"><h1>The IQ Balls</h1><p>New pieces · version 3</p></div>
     <div class="homemid">
       <svg id="heroSvg" style="height:min(46vh,380px);background:#2A2A2E;border-radius:18px;padding:8px;box-shadow:0 6px 0 #0d0d0f"></svg>
     </div>
     <div class="homebtns">
-      <button class="bigbtn green" id="btnPlay">Играть</button>
-      <button class="ghostbtn" id="btnMap">Карта уровней</button>
-      <button class="ghostbtn" id="btnRules">Как играть</button>
-      <div style="text-align:center;color:#8a8396;font-size:14px;margin:4px 0">Версии: <a href="index.html" style="color:#9ACD32">Оригинал</a> · <a href="new_v1.html" style="color:#9ACD32">1</a> · <a href="new_v2.html" style="color:#9ACD32">2</a> · <b style="color:#fff">3</b> · <a href="new.html" style="color:#9ACD32">4</a></div>
-      <div class="viewsw" id="viewSw"><button data-v="balloons">🎈 Шарики</button><button data-v="fruits">🍓 Фрукты</button></div>
-      <button class="boardpick" id="boardPick">Поле: <b id="boardName">Лунки</b> ›</button>
+      <button class="bigbtn green" id="btnPlay">Play</button>
+      <button class="ghostbtn" id="btnMap">Level map</button>
+      <button class="ghostbtn" id="btnRules">How to play</button>
+      <div style="text-align:center;color:#8a8396;font-size:14px;margin:4px 0">Versions: <a href="index.html" style="color:#9ACD32">Original</a> · <a href="new_v1.html" style="color:#9ACD32">1</a> · <a href="new_v2.html" style="color:#9ACD32">2</a> · <b style="color:#fff">3</b> · <a href="new.html" style="color:#9ACD32">4</a></div>
+      <div class="viewsw" id="viewSw"><button data-v="balloons">🎈 Balloons</button><button data-v="fruits">🍓 Fruits</button></div>
+      <button class="boardpick" id="boardPick">Board: <b id="boardName">Holes</b> ›</button>
       <div class="stats" id="homeStats"></div>
     </div>
   </section>
 
   <!-- MAP -->
   <section class="screen" id="map">
-    <div class="topbar"><button class="iconbtn" data-go="home">‹</button><div class="title">Карта уровней</div><button class="wallet" data-shop>💡 <span class="wcnt">3</span><span class="plus">+</span></button></div>
+    <div class="topbar"><button class="iconbtn" data-go="home">‹</button><div class="title">Level map</div><button class="wallet" data-shop>💡 <span class="wcnt">3</span><span class="plus">+</span></button></div>
     <div class="mapscroll" id="mapScroll"></div>
   </section>
 
@@ -293,33 +293,33 @@ body{-webkit-touch-callout:none}
   <section class="screen" id="game">
     <div class="topbar">
       <button class="iconbtn" id="gBack">‹</button>
-      <div class="title" id="gTitle">Уровень 1</div>
-      <button class="mbtn" id="gMascot" title="Помощь" style="font-size:24px"><span id="gMascotSvg">💡</span><span class="cnt wcnt">3</span></button>
+      <div class="title" id="gTitle">Level 1</div>
+      <button class="mbtn" id="gMascot" title="Help" style="font-size:24px"><span id="gMascotSvg">💡</span><span class="cnt wcnt">3</span></button>
     </div>
-    <div class="hintbar" id="hintBar"><span>💡 Выберите фигуру — покажу, где ей место</span><button id="hintCancel">Отмена</button></div>
-    <div class="bubble nudge" id="nudge">Застряли? Нажмите 💡 — там подсказка</div>
-    <div class="hud"><span class="chip" id="gCat">Starter</span><span>Фигуры: <b id="gLeft">0</b></span><span>Ходы: <b id="gMoves">0</b></span></div>
+    <div class="hintbar" id="hintBar"><span>💡 Pick a piece — I’ll show where it goes</span><button id="hintCancel">Cancel</button></div>
+    <div class="bubble nudge" id="nudge">Stuck? Tap 💡 for a hint</div>
+    <div class="hud"><span class="chip" id="gCat">Starter</span><span>Pieces: <b id="gLeft">0</b></span><span>Moves: <b id="gMoves">0</b></span></div>
     <div class="gamebody" id="gameBody">
       <div class="boardwrap"><svg id="board"></svg></div>
       <div id="tray"></div>
     </div>
     <div class="controls">
-      <button class="ctl" id="cRot">↻ Повернуть</button>
-      <button class="ctl" id="cFlip">⇋ Отразить</button>
+      <button class="ctl" id="cRot">↻ Rotate</button>
+      <button class="ctl" id="cFlip">⇋ Flip</button>
       <button class="ctl" id="cReset" style="flex:.55">⟲</button>
     </div>
   </section>
 
   <!-- RULES -->
   <section class="screen" id="rules">
-    <div class="topbar"><button class="iconbtn" data-go="home">‹</button><div class="title">Как играть</div></div>
+    <div class="topbar"><button class="iconbtn" data-go="home">‹</button><div class="title">How to play</div></div>
     <div style="overflow:auto;flex:1">
-      <div class="rule"><div class="n">1</div><p>На поле уже стоят <b>матовые</b> фигуры — они закреплены, их нельзя двигать. Ваши фигуры — глянцевые.</p></div>
-      <div class="rule"><div class="n">2</div><p>Перетащите остальные фигуры на поле. Тап по фигуре внизу — выбрать, ещё тап — повернуть. Кнопки <b>↻</b> и <b>⇋</b> — поворот и отражение.</p></div>
-      <div class="rule"><div class="n">3</div><p>Тап по своей фигуре на поле — она вернётся вниз.</p></div>
-      <div class="rule"><div class="n">4</div><p>Заполните все 55 лунок. Время не ограничено. Без подсказок — 3 звезды.</p></div>
-      <div class="rule"><div class="n">5</div><p>Застряли — нажмите 💡 → «Подсказка» и выберите фигуру: она встанет на своё место. Там же — пропуск уровня и «начать заново».</p></div>
-      <button class="bigbtn green" style="margin-top:22px" id="rulesPlay">Понятно, играть</button>
+      <div class="rule"><div class="n">1</div><p>Some <b>see-through</b> pieces are already on the board — they’re locked and can’t be moved. Your pieces are glossy.</p></div>
+      <div class="rule"><div class="n">2</div><p>Drag the remaining pieces onto the board. Tap a piece below to select it, tap again to rotate. The <b>↻</b> and <b>⇋</b> buttons rotate and flip.</p></div>
+      <div class="rule"><div class="n">3</div><p>Tap one of your pieces on the board to send it back down.</p></div>
+      <div class="rule"><div class="n">4</div><p>Fill all 55 holes. There’s no time limit. No hints = 3 stars.</p></div>
+      <div class="rule"><div class="n">5</div><p>Stuck? Tap 💡 → “Hint” and choose a piece: it will jump to its spot. You can also skip the level or start over there.</p></div>
+      <button class="bigbtn green" style="margin-top:22px" id="rulesPlay">Got it, let’s play</button>
     </div>
   </section>
 
@@ -330,78 +330,78 @@ body{-webkit-touch-callout:none}
 
   <!-- Board style picker -->
   <div class="modal" id="mBoard"><div class="sheet">
-    <h2>Вид поля</h2><div style="color:var(--muted)">Как отмечены клетки, куда ставить фигуры</div>
+    <h2>Board style</h2><div style="color:var(--muted)">How the cells for your pieces are marked</div>
     <div id="boardGrid"></div>
-    <button class="ghostbtn" data-close>Закрыть</button>
+    <button class="ghostbtn" data-close>Close</button>
   </div></div>
 
   <!-- Level preview sheet -->
   <div class="modal" id="mPreview"><div class="sheet">
-    <div id="pvCat" style="color:var(--muted)">Starter</div><h2 id="pvTitle">Уровень 1</h2>
+    <div id="pvCat" style="color:var(--muted)">Starter</div><h2 id="pvTitle">Level 1</h2>
     <div style="display:flex;gap:18px;align-items:center;justify-content:center;margin:10px 0 16px">
       <svg id="pvBoard" style="width:130px;background:#2A2A2E;border-radius:16px;padding:8px;flex:none"></svg>
-      <div class="res" style="flex-direction:column;gap:14px;margin:0;text-align:left"><div><b id="pvFree">3</b>фигур уложить</div><div><b id="pvBest">—</b>звёзды</div></div>
+      <div class="res" style="flex-direction:column;gap:14px;margin:0;text-align:left"><div><b id="pvFree">3</b>pieces to place</div><div><b id="pvBest">—</b>stars</div></div>
     </div>
-    <button class="bigbtn green" id="pvPlay">Играть</button>
-    <button class="ghostbtn" data-close>Закрыть</button>
+    <button class="bigbtn green" id="pvPlay">Play</button>
+    <button class="ghostbtn" data-close>Close</button>
   </div></div>
 
   <!-- Mascot help menu -->
   <div class="modal" id="mHelp"><div class="sheet">
-    <div class="sheethead"><div id="helpMascot"></div><div class="bubble left" id="helpBubble"><b style="color:var(--ink);font-size:24px;display:block">Помощь</b>Чем помочь?</div></div>
-    <button class="menuitem" id="hHint"><span class="ic">💡</span>Подсказка<span class="r" id="hHintR">осталось 3</span></button>
-    <button class="menuitem" id="hSkip"><span class="ic">⏭</span>Пропустить уровень<span class="r">▶ реклама</span></button>
-    <button class="menuitem" id="hRestart"><span class="ic">⟲</span>Начать заново<span class="r"></span></button>
-    <button class="menuitem" id="hTut"><span class="ic">🎓</span>Как играть — показать<span class="r"></span></button>
-    <button class="ghostbtn" data-close style="margin-top:14px">Продолжить играть</button>
+    <div class="sheethead"><div id="helpMascot"></div><div class="bubble left" id="helpBubble"><b style="color:var(--ink);font-size:24px;display:block">Help</b>How can I help?</div></div>
+    <button class="menuitem" id="hHint"><span class="ic">💡</span>Hint<span class="r" id="hHintR">3 left</span></button>
+    <button class="menuitem" id="hSkip"><span class="ic">⏭</span>Skip level<span class="r">▶ ad</span></button>
+    <button class="menuitem" id="hRestart"><span class="ic">⟲</span>Start over<span class="r"></span></button>
+    <button class="menuitem" id="hTut"><span class="ic">🎓</span>How to play — show me<span class="r"></span></button>
+    <button class="ghostbtn" data-close style="margin-top:14px">Keep playing</button>
   </div></div>
 
   <!-- Out of hints -->
   <div class="modal" id="mNoHints"><div class="sheet">
-    <div class="sheethead"><div id="nhMascot"></div><div class="bubble left"><b style="color:var(--ink);font-size:24px;display:block">Подсказки закончились</b>Можно получить ещё одну за рекламу</div></div>
-    <button class="bigbtn green" id="nhAd">▶ Смотреть рекламу · +1 💡</button>
-    <button class="ghostbtn" id="nhShop">Купить подсказки</button>
-    <button class="ghostbtn" data-close>Не надо</button>
+    <div class="sheethead"><div id="nhMascot"></div><div class="bubble left"><b style="color:var(--ink);font-size:24px;display:block">You’re out of hints</b>Watch an ad to get one more</div></div>
+    <button class="bigbtn green" id="nhAd">▶ Watch ad · +1 💡</button>
+    <button class="ghostbtn" id="nhShop">Buy hints</button>
+    <button class="ghostbtn" data-close>No thanks</button>
   </div></div>
 
   <!-- Shop -->
   <div class="modal" id="mShop"><div class="sheet">
-    <div class="sheethead"><div id="shopMascot"></div><div class="bubble left"><b style="color:var(--ink);font-size:24px;display:block">Подсказки</b>У вас: <b class="wcnt">3</b> 💡</div></div>
-    <div class="pack"><span class="ic">▶</span><div><b>+1 подсказка</b><small>за просмотр рекламы</small></div><button data-buy="ad">Смотреть</button></div>
-    <div class="pack"><span class="ic">💡</span><div><b>5 подсказок</b><small>маленький набор</small></div><button data-buy="5">0,99 €</button></div>
-    <div class="pack best"><span class="ic">💡</span><div><b>20 подсказок</b><small>выгоднее на 40%</small></div><button data-buy="20">2,99 €</button></div>
-    <div class="pack"><span class="ic">🚫</span><div><b>Без рекламы</b><small>+ 10 подсказок, пропуск без рекламы</small></div><button data-buy="noads">4,99 €</button></div>
-    <div class="note">Прототип: покупки и реклама имитируются. В iOS — StoreKit 2 и AdMob.</div>
-    <button class="ghostbtn" data-close>Закрыть</button>
+    <div class="sheethead"><div id="shopMascot"></div><div class="bubble left"><b style="color:var(--ink);font-size:24px;display:block">Hints</b>You have: <b class="wcnt">3</b> 💡</div></div>
+    <div class="pack"><span class="ic">▶</span><div><b>+1 hint</b><small>for watching an ad</small></div><button data-buy="ad">Watch</button></div>
+    <div class="pack"><span class="ic">💡</span><div><b>5 hints</b><small>small pack</small></div><button data-buy="5">€0.99</button></div>
+    <div class="pack best"><span class="ic">💡</span><div><b>20 hints</b><small>save 40%</small></div><button data-buy="20">€2.99</button></div>
+    <div class="pack"><span class="ic">🚫</span><div><b>No ads</b><small>+10 hints, skip levels with no ads</small></div><button data-buy="noads">€4.99</button></div>
+    <div class="note">Prototype: purchases and ads are simulated. The iOS app will use StoreKit 2 and AdMob.</div>
+    <button class="ghostbtn" data-close>Close</button>
   </div></div>
 
   <!-- Win -->
   <div class="modal" id="mWin"><div class="sheet">
     <div class="wintitle">The IQ Balls</div>
-    <div class="sheethead"><div id="winMascot"></div><div class="bubble left" id="winBubble">Отлично!</div></div>
-    <div id="winCat" style="color:var(--muted)">Starter · Уровень 1</div>
-    <h2>Решено!</h2>
+    <div class="sheethead"><div id="winMascot"></div><div class="bubble left" id="winBubble">Great!</div></div>
+    <div id="winCat" style="color:var(--muted)">Starter · Level 1</div>
+    <h2>Solved!</h2>
     <div class="winballs" id="winStars"></div>
-    <div class="res"><div><b id="winTime">0:00</b>время</div><div><b id="winMoves">0</b>ходов</div><div><b id="winStreak">1</b>подряд 🔥</div></div>
-    <button class="bigbtn green" id="winNext">Дальше</button>
-    <button class="ghostbtn" id="winMap">К карте</button>
+    <div class="res"><div><b id="winTime">0:00</b>time</div><div><b id="winMoves">0</b>moves</div><div><b id="winStreak">1</b>in a row 🔥</div></div>
+    <button class="bigbtn green" id="winNext">Next</button>
+    <button class="ghostbtn" id="winMap">To map</button>
   </div></div>
 
   <!-- Lose -->
   <div class="modal" id="mLose"><div class="sheet">
-    <div class="sheethead"><div id="loseMascot"></div><div class="bubble left" id="loseBubble">Время вышло…</div></div>
-    <h2>Время вышло</h2>
-    <p style="color:var(--muted);margin:0 0 14px">Осталось уложить фигур: <b id="loseLeft">0</b></p>
-    <button class="bigbtn green" id="loseAd">▶ Реклама · +1 минута</button>
-    <button class="ghostbtn" id="loseRetry">Начать заново</button>
-    <button class="ghostbtn" id="loseSkip">Пропустить уровень <span class="adtag">▶ реклама</span></button>
+    <div class="sheethead"><div id="loseMascot"></div><div class="bubble left" id="loseBubble">Time’s up…</div></div>
+    <h2>Time’s up</h2>
+    <p style="color:var(--muted);margin:0 0 14px">Pieces left to place: <b id="loseLeft">0</b></p>
+    <button class="bigbtn green" id="loseAd">▶ Watch ad · +1 minute</button>
+    <button class="ghostbtn" id="loseRetry">Start over</button>
+    <button class="ghostbtn" id="loseSkip">Skip level <span class="adtag">▶ ad</span></button>
   </div></div>
 
   <!-- Fake ad -->
   <div class="ad" id="ad">
-    <div class="adtop"><span>Реклама · награда через <b id="adSec">5</b> с</span><button class="adclose" id="adClose" disabled>✕</button></div>
+    <div class="adtop"><span>Ad · reward in <b id="adSec">5</b> s</span><button class="adclose" id="adClose" disabled>✕</button></div>
     <div class="adbar"><i id="adBar"></i></div>
-    <div class="adbody"><div style="font-size:64px">🎮</div><h3>Здесь будет рекламный ролик</h3><p style="opacity:.7;margin:0">Rewarded video (AdMob) · 15–30 сек</p></div>
+    <div class="adbody"><div style="font-size:64px">🎮</div><h3>Your ad video will play here</h3><p style="opacity:.7;margin:0">Rewarded video (AdMob) · 15–30 sec</p></div>
   </div>
 
   <div class="toast" id="toast"></div>
@@ -569,7 +569,7 @@ function drawBalloonPiece(g,pi,cells,s,ox=0,oy=0,opts={}){
   }
   g.insertAdjacentHTML('beforeend',glass?`${seg}<g opacity=".75">${kn+tl}</g>`:sh+neck+seg+kn+tl);
 }
-/* Поле: вид клеток (выбирается на главной; общий для оригинала и всех версий) */
+/* Board: вид клеток (выбирается на главной; общий для оригинала и всех версий) */
 let BOARD=(()=>{try{return localStorage.getItem('balls.board')||'holes'}catch(e){return 'holes'}})();
 const BOARD_STYLES={
  holes:(c,r,s)=>`<circle cx="${c*s+s/2}" cy="${r*s+s/2}" r="${s*.36}" fill="url(#hole)"/>`,
@@ -623,9 +623,9 @@ function mascotOld(mood='happy',size=120){
     ${eyes}${mouth}${extra}
   </svg>`;
 }
-const PRAISE=['Вот это скорость мысли!','Красиво уложено!','Ты прирождённый головоломщик!','Ни одной пустой лунки!','Мозг разогрет — идём дальше?','Так держать! 🔥','Головоломка сдалась!'];
-const PRAISE_NOHINT=['Без единой подсказки! Уважаю.','Чисто сам — три звезды заслуженно!'];
-const LOSE=['Ничего, это было сложно. Ещё минутку?','Почти получилось! Давай ещё раз.','Время — хитрая штука. Попробуем снова?'];
+const PRAISE=['Now that’s quick thinking!','Beautifully packed!','You’re a born puzzler!','Not a single empty hole!','Brain warmed up — next one?','Keep it up! 🔥','The puzzle gave up!'];
+const PRAISE_NOHINT=['Not a single hint! Respect.','All on your own — three well-earned stars!'];
+const LOSE=['No worries, that was a tough one. One more minute?','So close! Let’s try again.','Time is tricky. Try again?'];
 const pick=a=>a[Math.floor(Math.random()*a.length)];
 
 /* ---------- навигация ---------- */
@@ -651,8 +651,8 @@ function refreshWallet(){document.querySelectorAll('.wcnt').forEach(e=>e.textCon
 /* ---------- HOME ---------- */
 function renderHome(){
   const solved=Object.keys(S0.done).length,cur=currentLevel();
-  $('#homeStats').innerHTML=`<span>Пройдено ${solved}/${LEVELS.length}</span><span>·</span><span>★ ${totalStars()}</span>${S0.streak?`<span>·</span><span>🔥 ${S0.streak}</span>`:''}`;
-  $('#btnPlay').textContent=solved||Object.keys(S0.skipped).length?`Продолжить · уровень ${cur}`:'Играть';
+  $('#homeStats').innerHTML=`<span>Solved ${solved}/${LEVELS.length}</span><span>·</span><span>★ ${totalStars()}</span>${S0.streak?`<span>·</span><span>🔥 ${S0.streak}</span>`:''}`;
+  $('#btnPlay').textContent=solved||Object.keys(S0.skipped).length?`Continue · level ${cur}`:'Play';
   heroAssemble();
 }
 
@@ -704,7 +704,7 @@ function popBalloons(svg,pts,col,S,pi){
   setTimeout(()=>lay.remove(),pts.length*45+600);
 }
 /* ---------- MAP ---------- */
-/* Карта уровней: одна гирлянда из шариков, без деления на категории. Уровни открываются по порядку. */
+/* Level map: одна гирлянда из шариков, без деления на категории. Уровни открываются по порядку. */
 const LV_STOPS=['#9BC21C','#F2A01C','#E5372E','#7A2E8E','#2747A8'];
 function lvColor(n){const t=(n-1)/Math.max(1,LEVELS.length-1)*(LV_STOPS.length-1),i=Math.min(LV_STOPS.length-2,Math.floor(t));return mix(LV_STOPS[i],LV_STOPS[i+1],t-i)}
 function renderMap(){
@@ -726,21 +726,21 @@ function renderMap(){
         `<text x="${x}" y="${y+r*.3}" text-anchor="middle" font-size="${r*.82}" font-weight="800" fill="#fff" style="paint-order:stroke" stroke="${dk}" stroke-width="${r*.08}">${n}</text>`;
       const k=S0.done[n]||0;
       if(k)for(let j=0;j<3;j++)g+=`<text x="${x+(j-1)*r*.44}" y="${y+r*1.75}" text-anchor="middle" font-size="${r*.42}" fill="${j<k?'#FFD84A':'#3a3a40'}">★</text>`;
-      else if(isSkipped(n))g+=`<text x="${x}" y="${y+r*1.72}" text-anchor="middle" font-size="${r*.36}" fill="#A9A4B5">пропущен</text>`;
-      else if(s==='cur')g+=`<text x="${x}" y="${y+r*1.72}" text-anchor="middle" font-size="${r*.4}" font-weight="700" fill="#fff">старт</text>`}
+      else if(isSkipped(n))g+=`<text x="${x}" y="${y+r*1.72}" text-anchor="middle" font-size="${r*.36}" fill="#A9A4B5">skipped</text>`;
+      else if(s==='cur')g+=`<text x="${x}" y="${y+r*1.72}" text-anchor="middle" font-size="${r*.4}" font-weight="700" fill="#fff">start</text>`}
     balls+=`<g data-n="${n}" style="cursor:pointer">${g}<circle cx="${x}" cy="${y}" r="${r*1.3}" fill="transparent"/></g>`});
   const head=`<div style="display:flex;align-items:center;gap:10px;margin:14px 4px 10px"><div style="flex:1;height:8px;border-radius:4px;background:#2a2a2f;overflow:hidden"><div style="height:100%;width:${LEVELS.filter(l=>passed(l.n)).length/LEVELS.length*100}%;background:linear-gradient(90deg,${LV_STOPS.join(',')});background-size:${LEVELS.length/Math.max(1,LEVELS.filter(l=>passed(l.n)).length)*100}% 100%"></div></div><span style="color:#8a8396;font-size:14px">${LEVELS.filter(l=>passed(l.n)).length}/${LEVELS.length}</span></div>`;
   box.innerHTML=head+`<svg id="garland" width="${w}" height="${H}" style="display:block;margin:auto;overflow:visible"><defs>${defs}</defs>${links}${balls}</svg>`;
   $('#garland').addEventListener('click',e=>{const g=e.target.closest('g[data-n]');if(!g)return;const n=+g.dataset.n;
-    unlocked(n)?openPreview(n):toast('Сначала пройдите или пропустите уровень '+(n-1))});
+    unlocked(n)?openPreview(n):toast('Solve or skip the previous level first '+(n-1))});
   requestAnimationFrame(()=>{const p=pts[cur-1];if(p){box.style.scrollBehavior='auto';box.scrollTop=p[1]-box.clientHeight/2+60;box.style.scrollBehavior=''}});
 }
 function openPreview(n){
   const L=LEVELS[n-1];const s=$('#pvBoard');const sol=L.solution.split(',').map(Number);
   boardSvg(s,30,new Set(sol.map((v,i)=>L.placed.includes(v)?i:-1).filter(i=>i>=0)));const g=document.createElementNS(NS,'g');s.appendChild(g);L.placed.forEach(pi=>drawPiece(g,pi,cellsOf(sol,pi),30));
   $('#pvCat').textContent=CATS.find(c=>c.id===L.cat).name;$('#pvCat').style.color=CAT_HEX[L.cat];
-  $('#pvTitle').textContent='Уровень '+n;$('#pvFree').textContent=12-L.placed.length;
-  $('#pvBest').textContent=S0.done[n]?'★'.repeat(S0.done[n]):isSkipped(n)?'пропущен':'—';
+  $('#pvTitle').textContent='Level '+n;$('#pvFree').textContent=12-L.placed.length;
+  $('#pvBest').textContent=S0.done[n]?'★'.repeat(S0.done[n]):isSkipped(n)?'skipped':'—';
   $('#pvPlay').onclick=()=>startLevel(n);openM('#mPreview');
 }
 
@@ -757,7 +757,7 @@ function startLevel(n){
        let c=norm(PIECES[pi].cells);const k=(pi*7+n)%4;for(let i=0;i<k;i++)c=rot(c);if((pi+n)%3===0)c=flip(c);return[pi,c]})),
      onBoard:{},sel:free[0],hints:0,moves:0,used:0,done:false,paused:false,lastMove:Date.now()};
   $('#hintBar').classList.remove('on');$('#game').classList.remove('picking');
-  $('#gTitle').textContent='Уровень '+n;
+  $('#gTitle').textContent='Level '+n;
   $('#gCat').textContent=CATS.find(c=>c.id===L.cat).name;$('#gCat').style.background=CAT_HEX[L.cat];$('#gCat').style.color='#fff';
   
   document.querySelectorAll('.screen').forEach(e=>e.classList.toggle('on',e.id==='game'));
@@ -858,9 +858,9 @@ function tutStart(){
 function tutEnd(){TUT=null;S0.tut=true;save();$('#tut').classList.remove('on');stopHand();resumeTimer();const pv=$('#preview');if(pv)pv.querySelectorAll('.tuttarget').forEach(e=>e.remove())}
 function renderTut(){
   const steps=[
-    {h:'Заполните все пустые лунки',p:'Матовые фигуры закреплены 🔒. Пустые лунки заполните фигурами справа.',btn:'Понятно'},
-    {h:'Перетащите фигуру',p:'Зажмите фигуру справа и тяните на подсвеченные лунки.',btn:null},
-    {h:'Поворачивайте фигуры',p:'Тап по фигуре справа — поворот. <b>↻</b> и <b>⇋</b> внизу — поворот и зеркало. Застряли — 💡.',btn:'Играть'},
+    {h:'Fill all the empty holes',p:'See-through pieces are locked 🔒. Fill the empty holes with the pieces on the right.',btn:'Got it'},
+    {h:'Drag a piece',p:'Hold a piece on the right and drag it onto the highlighted holes.',btn:null},
+    {h:'Rotate the pieces',p:'Tap a piece on the right to rotate it. <b>↻</b> and <b>⇋</b> below rotate and flip. Stuck? Tap 💡.',btn:'Play'},
   ];
   const st=steps[TUT.step];$('#tut').classList.add('on');
   // карточка — с той стороны, где нет пустых лунок, чтобы не закрывать цель и руку
@@ -870,9 +870,9 @@ function renderTut(){
   // сверху — не залезаем на колонку фигур справа
   const ar=$('#app').getBoundingClientRect(),tr=$('#tray').getBoundingClientRect();
   card.style.right=(low&&TUT.step>0)?Math.max(14,ar.right-tr.left+8)+'px':'';
-  $('#tutCard').innerHTML=`<div class="step">Шаг ${TUT.step+1} из ${steps.length}</div><h3>${st.h}</h3><p>${st.p}</p>
+  $('#tutCard').innerHTML=`<div class="step">Step ${TUT.step+1} of ${steps.length}</div><h3>${st.h}</h3><p>${st.p}</p>
     <div class="row"><div class="dots">${steps.map((_,i)=>`<i class="${i===TUT.step?'on':''}"></i>`).join('')}</div>
-    <button class="skip" id="tutSkip">Пропустить</button>${st.btn?`<button class="go" id="tutGo">${st.btn}</button>`:''}</div>`;
+    <button class="skip" id="tutSkip">Skip</button>${st.btn?`<button class="go" id="tutGo">${st.btn}</button>`:''}</div>`;
   $('#tutSkip').onclick=()=>tutEnd();
   if(st.btn)$('#tutGo').onclick=()=>{if(TUT.step===0){TUT.step=1;renderTut()}else tutEnd()};
   stopHand();
@@ -933,7 +933,7 @@ $('#board').addEventListener('pointerdown',e=>{
   if(G.done)return;const m=boardMetrics(),p=appPoint(e);const c=Math.floor((p.x-m.x)/m.cell),r=Math.floor((p.y-m.y)/m.cell);
   if(r<0||r>=H||c<0||c>=W)return;const pi=G.grid[r*W+c];if(pi<0)return;
   if(G.hintPick&&!G.fixed.has(pi)){e.preventDefault();pickHint(pi);return}
-  if(G.fixed.has(pi)){const bw=$('.boardwrap');bw.classList.remove('shake');void bw.offsetWidth;bw.classList.add('shake');toast('🔒 Эта фигура закреплена');flashLock(r,c);return}
+  if(G.fixed.has(pi)){const bw=$('.boardwrap');bw.classList.remove('shake');void bw.offsetWidth;bw.classList.add('shake');toast('🔒 This piece is locked');flashLock(r,c);return}
   const abs=cellsOf(G.grid,pi);const mr=Math.min(...abs.map(c=>c[0])),mc=Math.min(...abs.map(c=>c[1]));
   const cells=norm(abs);beginDrag(e,pi,cells,[r-mr,c-mc]);drag.from='board';drag.lift=0;drag.abs=abs;
   // фигуру «берём» с поля только когда палец сдвинулся — при простом тапе она лопается на месте
@@ -959,24 +959,24 @@ window.addEventListener('pointerup',endDrag);window.addEventListener('pointercan
 
 $('#cRot').onclick=()=>{if(G.sel==null||G.onBoard[G.sel])return;G.shape[G.sel]=rot(G.shape[G.sel]);render()};
 $('#cFlip').onclick=()=>{if(G.sel==null||G.onBoard[G.sel])return;G.shape[G.sel]=flip(G.shape[G.sel]);render()};
-$('#cReset').onclick=()=>{G.free.forEach(pi=>{if(G.onBoard[pi])lift(pi)});G.sel=G.free[0];render();toast('Поле очищено')};
+$('#cReset').onclick=()=>{G.free.forEach(pi=>{if(G.onBoard[pi])lift(pi)});G.sel=G.free[0];render();toast('Board cleared')};
 $('#gBack').onclick=()=>{if(TUT){TUT=null;$('#tut').classList.remove('on');stopHand()}go('map')};
 
 /* ---------- Бусик: помощь ---------- */
 $('#gMascot').onclick=()=>{if(G.done)return;hideNudge();pauseTimer();
   $('#helpMascot').innerHTML=mascot('think',96);
-  $('#hHintR').textContent=S0.hints?`осталось ${S0.hints}`:'▶ реклама';
-  $('#hSkip').querySelector('.r').textContent=S0.noads?'бесплатно':'▶ реклама';
+  $('#hHintR').textContent=S0.hints?`${S0.hints} left`:'▶ ad';
+  $('#hSkip').querySelector('.r').textContent=S0.noads?'free':'▶ ad';
   openM('#mHelp')};
 $('#hHint').onclick=()=>{if(S0.hints>0){closeAll();startHintPick('wallet')}else{$('#nhMascot').innerHTML=mascot('sad',90);openM('#mNoHints')}};
 $('#hSkip').onclick=()=>withAd(()=>skipLevel());
 $('#hRestart').onclick=()=>startLevel(G.L.n);
 $('#hTut').onclick=()=>{closeAll();tutStart()};
 $('#nhAd').onclick=()=>showAd(()=>{closeAll();startHintPick('ad')});
-$('#hintCancel').onclick=()=>{const paid=G.hintPick;endHintPick();if(paid==='ad'){S0.hints++;save();refreshWallet();toast('Подсказка сохранена на потом')}};
+$('#hintCancel').onclick=()=>{const paid=G.hintPick;endHintPick();if(paid==='ad'){S0.hints++;save();refreshWallet();toast('Hint saved for later')}};
 $('#nhShop').onclick=()=>openShop();
 
-/* Подсказка: игрок сам выбирает фигуру */
+/* Hint: игрок сам выбирает фигуру */
 /* ---------- Решатель в браузере: дорешивает ТЕКУЩУЮ расстановку игрока ---------- */
 const ORIS=PIECES.map(p=>{const out=[],seen=new Set();let c=norm(p.cells);
   for(let f=0;f<2;f++){for(let k=0;k<4;k++){const n=norm(c),key=JSON.stringify(n);if(!seen.has(key)){seen.add(key);out.push(n)}c=rot(c)}c=flip(c)}return out});
@@ -1000,12 +1000,12 @@ function completeBoard(grid,left,cap=250000){ // grid: W*H (-1 пусто); left
 function hintTarget(pi){return{cells:cellsOf(G.sol,pi),kept:true}}
 function isRightNow(pi){return G.onBoard[pi]&&cellsOf(G.grid,pi)+''===cellsOf(G.sol,pi)+''}
 function startHintPick(paid){
-  if(!G.free.some(pi=>!G.onBoard[pi])&&!G.grid.includes(-1)){toast('Все фигуры уже на своих местах');resumeTimer();return}
+  if(!G.free.some(pi=>!G.onBoard[pi])&&!G.grid.includes(-1)){toast('All pieces are already in place');resumeTimer();return}
   G.hintPick=paid;pauseTimer();hideNudge();$('#hintBar').classList.add('on');$('#game').classList.add('picking');render();
 }
 function endHintPick(){G.hintPick=null;$('#hintBar').classList.remove('on');$('#game').classList.remove('picking');render();resumeTimer()}
 function pickHint(pi){
-  if(isRightNow(pi)){toast('Эта фигура уже стоит верно — выберите другую');return}
+  if(isRightNow(pi)){toast('This piece is already in place — pick another');return}
   const paid=G.hintPick;if(paid==='wallet'){S0.hints--;save();refreshWallet()}
   G.hintPick=null;$('#hintBar').classList.remove('on');$('#game').classList.remove('picking');
   useHint(pi);resumeTimer();
@@ -1019,10 +1019,10 @@ function useHint(pi){
   place(pi,norm(target),mr,mc);
   const pv=$('#preview');if(pv){const hl=document.createElementNS(NS,'g');pv.appendChild(hl);target.forEach(([r,c])=>hl.insertAdjacentHTML('beforeend',`<circle cx="${c*S+S/2}" cy="${r*S+S/2}" r="${S*.48}" fill="none" stroke="#FFC61A" stroke-width="3"/>`));
     hl.animate([{opacity:1},{opacity:1,offset:.6},{opacity:0}],{duration:1400,fill:'forwards'}).onfinish=()=>hl.remove()}
-  if(!G.done)toast(moved.length?'Фигура на своём месте. Мешавшие фигуры вернулись вниз':'Фигура на своём месте');
+  if(!G.done)toast(moved.length?'The piece is in place. Pieces in the way went back down':'The piece is in place');
 }
 function skipLevel(){const n=G.L.n;S0.skipped[n]=true;S0.streak=0;save();G.done=true;stopTimer();closeAll();
-  toast('Уровень '+n+' пропущен');if(n<LEVELS.length)startLevel(n+1);else go('map')}
+  toast('Level '+n+' skipped');if(n<LEVELS.length)startLevel(n+1);else go('map')}
 
 /* ---------- реклама и магазин (имитация) ---------- */
 function withAd(fn){if(S0.noads){fn();return}showAd(fn)}
@@ -1032,16 +1032,16 @@ function showAd(onReward){pauseTimer();const ad=$('#ad');ad.classList.add('on');
   $('#adClose').onclick=()=>{ad.classList.remove('on');onReward()}}
 function openShop(){pauseTimer();$('#shopMascot').innerHTML=mascot('happy',90);refreshWallet();openM('#mShop')}
 document.querySelectorAll('[data-buy]').forEach(b=>b.onclick=()=>{const k=b.dataset.buy;
-  if(k==='ad'){showAd(()=>{S0.hints++;save();refreshWallet();openShop();toast('+1 подсказка')});return}
-  if(k==='noads'){S0.noads=true;S0.hints+=10}else S0.hints+=+k;save();refreshWallet();toast('Тестовая покупка: готово ✓')});
+  if(k==='ad'){showAd(()=>{S0.hints++;save();refreshWallet();openShop();toast('+1 hint')});return}
+  if(k==='noads'){S0.noads=true;S0.hints+=10}else S0.hints+=+k;save();refreshWallet();toast('Test purchase: done ✓')});
 
 /* ---------- победа / проигрыш ---------- */
 function checkWin(){if(G.grid.includes(-1))return;G.done=true;stopTimer();
   const stars=G.hints===0?3:G.hints===1?2:1;const n=G.L.n;S0.done[n]=Math.max(S0.done[n]||0,stars);delete S0.skipped[n];S0.streak++;save();
   
   
-  $('#winBubble').textContent=S0.streak>=3&&S0.streak%3===0?`${S0.streak} уровня подряд! Ты в ударе 🔥`:stars===3?pick(PRAISE_NOHINT.concat(PRAISE)):pick(PRAISE);
-  $('#winCat').textContent=CATS.find(c=>c.id===G.L.cat).name+' · Уровень '+n;
+  $('#winBubble').textContent=S0.streak>=3&&S0.streak%3===0?`${S0.streak} levels in a row! You’re on fire 🔥`:stars===3?pick(PRAISE_NOHINT.concat(PRAISE)):pick(PRAISE);
+  $('#winCat').textContent=CATS.find(c=>c.id===G.L.cat).name+' · Level '+n;
   $('#winStars').innerHTML=[1,2,3].map(i=>balloonIcon(i<=stars)).join('');
   $('#winTime').textContent=fmt(G.used);$('#winMoves').textContent=G.moves;$('#winStreak').textContent=S0.streak;
   $('#winNext').style.display=n<LEVELS.length?'':'none';popAnim(()=>{openM('#mWin');
@@ -1090,17 +1090,17 @@ $('#winMap').onclick=()=>go('map');
 function lose(){G.paused=true;S0.streak=0;save();
   $('#loseMascot').innerHTML=mascot('sad',96);$('#loseBubble').textContent=pick(LOSE);
   $('#loseLeft').textContent=G.free.filter(pi=>!G.onBoard[pi]).length;
-  $('#loseSkip').querySelector('.adtag').textContent=S0.noads?'бесплатно':'▶ реклама';
-  $('#loseAd').textContent=S0.noads?'+1 минута':'▶ Реклама · +1 минута';
+  $('#loseSkip').querySelector('.adtag').textContent=S0.noads?'free':'▶ ad';
+  $('#loseAd').textContent=S0.noads?'+1 minute':'▶ Watch ad · +1 minute';
   openM('#mLose')}
-$('#loseAd').onclick=()=>withAd(()=>{closeAll();G.left=60000;G.paused=false;lastTick=Date.now();paintTime();toast('+1 минута! Вперёд')});
+$('#loseAd').onclick=()=>withAd(()=>{closeAll();G.left=60000;G.paused=false;lastTick=Date.now();paintTime();toast('+1 minute! Go')});
 $('#loseRetry').onclick=()=>startLevel(G.L.n);
 $('#loseSkip').onclick=()=>withAd(()=>skipLevel());
 
 let tt;function toast(m){const t=$('#toast');t.textContent=m;t.classList.add('on');clearTimeout(tt);tt=setTimeout(()=>t.classList.remove('on'),1700)}
 
 renderHome();refreshWallet();
-const BOARD_NAMES={holes:'Лунки',quilt:'Стёжка',tiles:'Плитки',dots:'Точки',plus:'Плюсы',ring:'Кольца',beads:'Бусы',ringplus:'Кольца+'};
+const BOARD_NAMES={holes:'Holes',quilt:'Stitch',tiles:'Tiles',dots:'Dots',plus:'Plus',ring:'Rings',beads:'Beads',ringplus:'Rings+'};
 function boardTile(k){const s=22,cols=3,rows=2;const f=BOARD_STYLES[k];let h=k==='quilt'?'<defs><linearGradient id="qg" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#34343B"/><stop offset="1" stop-color="#26262C"/></linearGradient></defs>':'';
   for(let r=0;r<rows;r++)for(let c=0;c<cols;c++)h+=f(c,r,s);return `<svg viewBox="0 0 ${cols*s} ${rows*s}" style="width:100%;display:block">${h}</svg>`}
 function renderBoardPick(){$('#boardName').textContent=BOARD_NAMES[BOARD]||BOARD;
